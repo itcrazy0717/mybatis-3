@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2017 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.reflection.wrapper;
 
@@ -27,35 +27,48 @@ import org.apache.ibatis.reflection.invoker.Invoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 普通对象ObjectWrapper的实现类，如User这样的POJO类
  * @author Clinton Begin
  */
 public class BeanWrapper extends BaseWrapper {
 
+  /**
+   * 普通对象
+   */
   private final Object object;
   private final MetaClass metaClass;
 
   public BeanWrapper(MetaObject metaObject, Object object) {
     super(metaObject);
     this.object = object;
+    // 创建MetaClass对象
     this.metaClass = MetaClass.forClass(object.getClass(), metaObject.getReflectorFactory());
   }
 
   @Override
   public Object get(PropertyTokenizer prop) {
+    // 获得集合类型的属性指定给位置的值
     if (prop.getIndex() != null) {
+      // 获得集合类型的属性
       Object collection = resolveCollection(prop, object);
+      // 获取指定位置的值
       return getCollectionValue(prop, collection);
     } else {
+      // 获得属性的值
       return getBeanProperty(prop, object);
     }
   }
 
   @Override
   public void set(PropertyTokenizer prop, Object value) {
+    // 设置集合类型的属性的指定位置的值
     if (prop.getIndex() != null) {
+      // 获得集合类型的属性
       Object collection = resolveCollection(prop, object);
+      // 设置指定位置的值
       setCollectionValue(prop, collection, value);
     } else {
+      // 设置属性的值
       setBeanProperty(prop, object, value);
     }
   }
@@ -92,14 +105,21 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public Class<?> getGetterType(String name) {
+    // 创建PropertyTokenizer对象，对name进行分词
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    // 有子表达式
     if (prop.hasNext()) {
+      // 创建MetaObject对象
       MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
+      // 如果metaValue为空，则基于metaClass获得返回类型
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         return metaClass.getGetterType(name);
+        // 如果metaValue非空，则基于metaValue获得返回类型
       } else {
+        // 递归判断子表达式children，获得返回值的类型
         return metaValue.getGetterType(prop.getChildren());
       }
+     // 无子表达式 直接获取返回值的类型
     } else {
       return metaClass.getGetterType(name);
     }
@@ -107,8 +127,11 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public boolean hasSetter(String name) {
+    // 创建PropertyTokenizer对象，对name进行分词
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    // 有子表达式
     if (prop.hasNext()) {
+      // 判断是否有该属性值得
       if (metaClass.hasSetter(prop.getIndexedName())) {
         MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
         if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
