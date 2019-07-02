@@ -131,18 +131,24 @@ public class BeanWrapper extends BaseWrapper {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     // 有子表达式
     if (prop.hasNext()) {
-      // 判断是否有该属性值得
+      // 判断是否有该属性值的getting方法
       if (metaClass.hasSetter(prop.getIndexedName())) {
+        // 创建MetaObject对象
         MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
+        // 如果metavalue为空，则基于metaClass判断是否有该属性的getting方法
         if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
           return metaClass.hasSetter(name);
+        // 如果metaValue非空，则基于metaValue判断是否有getting方法
         } else {
+          // 递归判断子表达式children，判断是否有getting方法
           return metaValue.hasSetter(prop.getChildren());
         }
       } else {
         return false;
       }
+    // 无子表达式
     } else {
+      // 判断是否有该属性的getting方法
       return metaClass.hasSetter(name);
     }
   }
@@ -169,10 +175,14 @@ public class BeanWrapper extends BaseWrapper {
   @Override
   public MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory) {
     MetaObject metaValue;
+    // 获得setting方法的方法参数类型
     Class<?> type = getSetterType(prop.getName());
     try {
+      // 创建对象
       Object newObject = objectFactory.create(type);
+      // 创建MetaObject对象
       metaValue = MetaObject.forObject(newObject, metaObject.getObjectFactory(), metaObject.getObjectWrapperFactory(), metaObject.getReflectorFactory());
+      // 设置当前对象的值
       set(prop, newObject);
     } catch (Exception e) {
       throw new ReflectionException("Cannot set value of property '" + name + "' because '" + name + "' is null and cannot be instantiated on instance of " + type.getName() + ". Cause:" + e.toString(), e);
