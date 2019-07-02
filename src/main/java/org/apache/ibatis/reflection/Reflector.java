@@ -149,7 +149,7 @@ public class Reflector {
       String name = method.getName();
       if ((name.startsWith("get") && name.length() > 3)
           || (name.startsWith("is") && name.length() > 2)) {
-        // 获得属性
+        // 获得属性 如：getId，其属性就是id，其实该方法就是一个字符串的截取
         name = PropertyNamer.methodToProperty(name);
         // 添加到conflictingGetters集合中
         addMethodConflict(conflictingGetters, name, method);
@@ -178,6 +178,9 @@ public class Reflector {
         /**
          * 当两个方法的返回值类型一致，若两个方法返回值类型均为boolean，则选取isXXX方法为winner
          * 否则无法决定选择哪个方法更为合适，只能抛出异常
+         * 因为javaBean允许Bool类型的写法有两种：
+         * public boolean isBool() {return true;}
+         * public boolean getBool() {return false;}
          */
         if (candidateType.equals(winnerType)) {
           if (!boolean.class.equals(candidateType)) {
@@ -213,7 +216,7 @@ public class Reflector {
     if (isValidPropertyName(name)) {
       // 添加到getMethods中
       getMethods.put(name, new MethodInvoker(method));
-      // 添加到
+      // 添加到getTypes中 value为对应的实际参数类型
       Type returnType = TypeParameterResolver.resolveReturnType(method, type);
       getTypes.put(name, typeToClass(returnType));
     }
@@ -230,7 +233,7 @@ public class Reflector {
       // 方法名为set开头
       if (name.startsWith("set") && name.length() > 3) {
         if (method.getParameterTypes().length == 1) {
-          // 获得属性
+          // 获得属性 就是获得set后面的单词，如setId，这里就是获取Id
           name = PropertyNamer.methodToProperty(name);
           // 添加到conflictingSetters集合中
           addMethodConflict(conflictingSetters, name, method);
@@ -435,14 +438,14 @@ public class Reflector {
     for (Method currentMethod : methods) {
       // bridge方法 参见https://www.zhihu.com/question/54895701/answer/141623158
       if (!currentMethod.isBridge()) {
-        // 获得方法签名
+        // 获得方法签名 签名格式为返回值#方法名:方法参数1，方法参数2
         String signature = getSignature(currentMethod);
         // check to see if the method is already known
         // if it is known, then an extended class must have
         // overridden a method
         // 当前uniqueMethods不存在时，进行添加
         if (!uniqueMethods.containsKey(signature)) {
-          // 添加到uniqueMethods中
+          // 添加到uniqueMethods中 key：签名 value：方法名
           uniqueMethods.put(signature, currentMethod);
         }
       }
