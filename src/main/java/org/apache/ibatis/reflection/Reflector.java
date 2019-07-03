@@ -443,7 +443,7 @@ public class Reflector {
         // check to see if the method is already known
         // if it is known, then an extended class must have
         // overridden a method
-        // 当前uniqueMethods不存在时，进行添加
+        // 当前uniqueMethods不存在时，进行添加 这里会过滤方法签名相同的方法，对于同一个类来说
         if (!uniqueMethods.containsKey(signature)) {
           // 添加到uniqueMethods中 key：签名 value：方法名
           uniqueMethods.put(signature, currentMethod);
