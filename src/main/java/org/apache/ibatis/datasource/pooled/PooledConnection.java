@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.datasource.pooled;
 
@@ -28,17 +28,59 @@ import org.apache.ibatis.reflection.ExceptionUtil;
  */
 class PooledConnection implements InvocationHandler {
 
+  /**
+   * 关闭connection方法名
+   */
   private static final String CLOSE = "close";
-  private static final Class<?>[] IFACES = new Class<?>[] { Connection.class };
 
+  /**
+   * JDK Proxy 的接口
+   */
+  private static final Class<?>[] IFACES = new Class<?>[]{Connection.class};
+
+  /**
+   * 对象的标识，基于 {@link #realConnection} 求 hashCode
+   */
   private final int hashCode;
+
+  /**
+   * 所属的 PooledDataSource 对象
+   */
   private final PooledDataSource dataSource;
+
+  /**
+   * 真实的 Connection 连接
+   */
   private final Connection realConnection;
+
+  /**
+   * 代理的 Connection 连接，即 {@link PooledConnection} 这个动态代理的 Connection 对象
+   */
   private final Connection proxyConnection;
+
+  /**
+   * 从连接池中，获取走的时间戳
+   */
   private long checkoutTimestamp;
+
+  /**
+   * 对象创建时间
+   */
   private long createdTimestamp;
+
+  /**
+   * 最后更新时间
+   */
   private long lastUsedTimestamp;
+
+  /**
+   * 连接的标识，即 {@link PooledDataSource#expectedConnectionTypeCode}
+   */
   private int connectionTypeCode;
+
+  /**
+   * 是否有效
+   */
   private boolean valid;
 
   /**
@@ -48,16 +90,20 @@ class PooledConnection implements InvocationHandler {
    * @param dataSource - the dataSource that the connection is from
    */
   public PooledConnection(Connection connection, PooledDataSource dataSource) {
+    // 这里的hashCode是用connection来计算的
     this.hashCode = connection.hashCode();
     this.realConnection = connection;
     this.dataSource = dataSource;
     this.createdTimestamp = System.currentTimeMillis();
     this.lastUsedTimestamp = System.currentTimeMillis();
     this.valid = true;
+
+    // 创建代理的Connection对象
     this.proxyConnection = (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), IFACES, this);
   }
 
   /**
+   * 设置连接无效<br/>
    * Invalidates the connection.
    */
   public void invalidate() {
@@ -232,16 +278,19 @@ class PooledConnection implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
+    // 判断是否为close方法，如果是，则将连接放到连接池中，避免连接被关闭
     if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
       dataSource.pushConnection(this);
       return null;
     }
     try {
+      // 判断非Object的方法，检查连接是否可用
       if (!Object.class.equals(method.getDeclaringClass())) {
         // issue #579 toString() should never fail
         // throw an SQLException instead of a Runtime
         checkConnection();
       }
+      // 通过反射调用对应的方法
       return method.invoke(realConnection, args);
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);
@@ -250,6 +299,7 @@ class PooledConnection implements InvocationHandler {
   }
 
   private void checkConnection() throws SQLException {
+    // 当valid为false时，意味连接无效，则抛出异常
     if (!valid) {
       throw new SQLException("Error accessing PooledConnection. Connection is invalid.");
     }
