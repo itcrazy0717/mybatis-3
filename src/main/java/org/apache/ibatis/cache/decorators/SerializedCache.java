@@ -34,6 +34,9 @@ import org.apache.ibatis.io.Resources;
  */
 public class SerializedCache implements Cache {
 
+  /**
+   * 装饰的Cache对象
+   */
   private final Cache delegate;
 
   public SerializedCache(Cache delegate) {
