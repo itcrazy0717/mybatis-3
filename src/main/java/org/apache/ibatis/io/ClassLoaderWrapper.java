@@ -25,7 +25,14 @@ import java.net.URL;
  */
 public class ClassLoaderWrapper {
 
+  /**
+   * 默认ClassLoader对象
+   */
   ClassLoader defaultClassLoader;
+
+  /**
+   * 系统ClassLoader对象
+   */
   ClassLoader systemClassLoader;
 
   ClassLoaderWrapper() {
@@ -138,22 +145,24 @@ public class ClassLoaderWrapper {
   URL getResourceAsURL(String resource, ClassLoader[] classLoader) {
 
     URL url;
-
+    // 遍历ClassLoader数组
     for (ClassLoader cl : classLoader) {
 
       if (null != cl) {
-
+         // 获得URL，不带 /
         // look for the resource as passed in...
         url = cl.getResource(resource);
 
         // ...but some class loaders want this leading "/", so we'll add it
         // and try again if we didn't find the resource
+        // 获得URL，带 /
         if (null == url) {
           url = cl.getResource("/" + resource);
         }
 
         // "It's always in the last place I look for it!"
         // ... because only an idiot would keep looking for it after finding it, so stop looking already.
+        // 成功获得，返回
         if (null != url) {
           return url;
         }

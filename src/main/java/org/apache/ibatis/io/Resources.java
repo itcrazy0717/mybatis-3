@@ -32,6 +32,9 @@ import java.util.Properties;
  */
 public class Resources {
 
+  /**
+   * ClassLoaderWrapper对象
+   */
   private static ClassLoaderWrapper classLoaderWrapper = new ClassLoaderWrapper();
 
   /**
@@ -58,6 +61,7 @@ public class Resources {
    * @param defaultClassLoader - the new default ClassLoader
    */
   public static void setDefaultClassLoader(ClassLoader defaultClassLoader) {
+    // 修改ClassLoaderWrapper
     classLoaderWrapper.defaultClassLoader = defaultClassLoader;
   }
 
