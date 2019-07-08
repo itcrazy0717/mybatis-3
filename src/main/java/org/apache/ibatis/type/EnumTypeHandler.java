@@ -25,6 +25,9 @@ import java.sql.SQLException;
  */
 public class EnumTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E> {
 
+  /**
+   * 枚举类
+   */
   private final Class<E> type;
 
   public EnumTypeHandler(Class<E> type) {
@@ -36,6 +39,7 @@ public class EnumTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E> {
 
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, E parameter, JdbcType jdbcType) throws SQLException {
+    // 将Enum转换成String类型
     if (jdbcType == null) {
       ps.setString(i, parameter.name());
     } else {
@@ -45,7 +49,9 @@ public class EnumTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E> {
 
   @Override
   public E getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    // 获得String的值
     String s = rs.getString(columnName);
+    // 将String转换成Enum类型
     return s == null ? null : Enum.valueOf(type, s);
   }
 

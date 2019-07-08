@@ -29,13 +29,16 @@ public class DateOnlyTypeHandler extends BaseTypeHandler<Date> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, Date parameter, JdbcType jdbcType)
       throws SQLException {
+    // 将java date转换成sql date类型
     ps.setDate(i, new java.sql.Date(parameter.getTime()));
   }
 
   @Override
   public Date getNullableResult(ResultSet rs, String columnName)
       throws SQLException {
+    // 获得sql date的值
     java.sql.Date sqlDate = rs.getDate(columnName);
+    // 将sql date转换成java date类型
     if (sqlDate != null) {
       return new Date(sqlDate.getTime());
     }
@@ -45,7 +48,9 @@ public class DateOnlyTypeHandler extends BaseTypeHandler<Date> {
   @Override
   public Date getNullableResult(ResultSet rs, int columnIndex)
       throws SQLException {
+    // 获得sql date的值
     java.sql.Date sqlDate = rs.getDate(columnIndex);
+    // 将sql date转换成java date类型
     if (sqlDate != null) {
       return new Date(sqlDate.getTime());
     }

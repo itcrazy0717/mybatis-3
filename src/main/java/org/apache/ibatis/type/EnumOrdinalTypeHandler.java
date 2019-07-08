@@ -25,7 +25,15 @@ import java.sql.SQLException;
  */
 public class EnumOrdinalTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E> {
 
+  /**
+   * 枚举类
+   */
   private final Class<E> type;
+
+  /**
+   * {@link #type}下所有的枚举
+   * @see Class#getEnumConstants()
+   */
   private final E[] enums;
 
   public EnumOrdinalTypeHandler(Class<E> type) {
@@ -41,12 +49,15 @@ public class EnumOrdinalTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E
 
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, E parameter, JdbcType jdbcType) throws SQLException {
+    // 将Enum转换成int类型
     ps.setInt(i, parameter.ordinal());
   }
 
   @Override
   public E getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    // 获取int的值
     int ordinal = rs.getInt(columnName);
+    // 将int转换成enum类型
     if (ordinal == 0 && rs.wasNull()) {
       return null;
     }
@@ -55,7 +66,9 @@ public class EnumOrdinalTypeHandler<E extends Enum<E>> extends BaseTypeHandler<E
 
   @Override
   public E getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    // 获得int的值
     int ordinal = rs.getInt(columnIndex);
+    // 将int转换成Enum类型
     if (ordinal == 0 && rs.wasNull()) {
       return null;
     }

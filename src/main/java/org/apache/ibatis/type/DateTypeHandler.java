@@ -30,13 +30,17 @@ public class DateTypeHandler extends BaseTypeHandler<Date> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, Date parameter, JdbcType jdbcType)
       throws SQLException {
+    // 将Date转换成Timestamp类型
+    // 然后设置到ps中
     ps.setTimestamp(i, new Timestamp(parameter.getTime()));
   }
 
   @Override
   public Date getNullableResult(ResultSet rs, String columnName)
       throws SQLException {
+    // 获得Timestamp的值
     Timestamp sqlTimestamp = rs.getTimestamp(columnName);
+    // 将Timestamp转换成Date类型
     if (sqlTimestamp != null) {
       return new Date(sqlTimestamp.getTime());
     }
