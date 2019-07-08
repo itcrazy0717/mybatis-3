@@ -28,9 +28,13 @@ public final class LogFactory {
    */
   public static final String MARKER = "MYBATIS";
 
+  /**
+   * 使用的Log的构造方法
+   */
   private static Constructor<? extends Log> logConstructor;
 
   static {
+    // 逐个尝试，判断使用哪个Log的实现类，即初始化logConstructor属性
     tryImplementation(LogFactory::useSlf4jLogging);
     tryImplementation(LogFactory::useCommonsLogging);
     tryImplementation(LogFactory::useLog4J2Logging);
@@ -99,11 +103,14 @@ public final class LogFactory {
 
   private static void setImplementation(Class<? extends Log> implClass) {
     try {
+      // 获得参数为String的构造方法
       Constructor<? extends Log> candidate = implClass.getConstructor(String.class);
+      // 创建Log对象
       Log log = candidate.newInstance(LogFactory.class.getName());
       if (log.isDebugEnabled()) {
         log.debug("Logging initialized using '" + implClass + "' adapter.");
       }
+      // 创建成功，意味着可以使用，设置logConstructor对象
       logConstructor = candidate;
     } catch (Throwable t) {
       throw new LogException("Error setting Log implementation.  Cause: " + t, t);
