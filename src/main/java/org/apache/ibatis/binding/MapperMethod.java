@@ -46,7 +46,14 @@ import org.apache.ibatis.session.SqlSession;
  */
 public class MapperMethod {
 
+  /**
+   * SqlCommand对象
+   */
   private final SqlCommand command;
+
+  /**
+   * MethodSignature对象
+   */
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
@@ -218,15 +225,25 @@ public class MapperMethod {
 
   public static class SqlCommand {
 
+    /**
+     * {@link MappedStatement#getId()}
+     */
     private final String name;
+
+    /**
+     * sql命令类型
+     */
     private final SqlCommandType type;
 
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
+      // 获得MappedStatement对象
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
+      // 找不到MappedStatement
       if (ms == null) {
+        // 如果有@Flush注解，则标记为FLUSH类型
         if (method.getAnnotation(Flush.class) != null) {
           name = null;
           type = SqlCommandType.FLUSH;
@@ -234,8 +251,11 @@ public class MapperMethod {
           throw new BindingException("Invalid bound statement (not found): "
               + mapperInterface.getName() + "." + methodName);
         }
+      // 找到MappedStatement
       } else {
+        // 获取name
         name = ms.getId();
+        // 获得type
         type = ms.getSqlCommandType();
         if (type == SqlCommandType.UNKNOWN) {
           throw new BindingException("Unknown execution method for: " + name);
@@ -253,12 +273,16 @@ public class MapperMethod {
 
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
+      // 获得编号
       String statementId = mapperInterface.getName() + "." + methodName;
+      // 如果有，获得MappedStatement对象，并返回
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
+      // 如果没有，并且当前方法是declaringClass声明的，则说明真的找不到
       } else if (mapperInterface.equals(declaringClass)) {
         return null;
       }
+      // 遍历父接口，继续获得MappedStatement对象
       for (Class<?> superInterface : mapperInterface.getInterfaces()) {
         if (declaringClass.isAssignableFrom(superInterface)) {
           MappedStatement ms = resolveMappedStatement(superInterface, methodName,
@@ -268,6 +292,7 @@ public class MapperMethod {
           }
         }
       }
+      // 真的找不到，则返回null
       return null;
     }
   }
@@ -280,6 +305,10 @@ public class MapperMethod {
     private final boolean returnsCursor;
     private final boolean returnsOptional;
     private final Class<?> returnType;
+
+    /**
+     * 返回方法上的 {@link MapKey#value()} ，前提是返回类型为 Map
+     */
     private final String mapKey;
     private final Integer resultHandlerIndex;
     private final Integer rowBoundsIndex;
@@ -361,8 +390,11 @@ public class MapperMethod {
     private Integer getUniqueParamIndex(Method method, Class<?> paramType) {
       Integer index = null;
       final Class<?>[] argTypes = method.getParameterTypes();
+      // 遍历方法参数
       for (int i = 0; i < argTypes.length; i++) {
+        // 类型符合
         if (paramType.isAssignableFrom(argTypes[i])) {
+          // 获得第一次的位置
           if (index == null) {
             index = i;
           } else {
@@ -375,8 +407,11 @@ public class MapperMethod {
 
     private String getMapKey(Method method) {
       String mapKey = null;
+      // 返回类型为Map
       if (Map.class.isAssignableFrom(method.getReturnType())) {
+        // 使用@MapKey注解
         final MapKey mapKeyAnnotation = method.getAnnotation(MapKey.class);
+        // 获得@MapKey注解的键
         if (mapKeyAnnotation != null) {
           mapKey = mapKeyAnnotation.value();
         }
