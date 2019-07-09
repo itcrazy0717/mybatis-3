@@ -53,9 +53,24 @@ import org.apache.ibatis.type.TypeHandler;
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
+  /**
+   * 当前Mapper命名空间
+   */
   private String currentNamespace;
+
+  /**
+   * 资源引用的地址
+   */
   private final String resource;
+
+  /**
+   * 当前cache对象
+   */
   private Cache currentCache;
+
+  /**
+   * 是否未解析成功cache引用
+   */
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -69,10 +84,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public void setCurrentNamespace(String currentNamespace) {
+    // 如果currentNamespace为空，则抛出异常
     if (currentNamespace == null) {
       throw new BuilderException("The mapper element requires a namespace attribute to be specified.");
     }
 
+    // 如果currentNamespace已经设置，并且与传入的不相等，则抛出异常
     if (this.currentNamespace != null && !this.currentNamespace.equals(currentNamespace)) {
       throw new BuilderException("Wrong namespace. Expected '"
           + this.currentNamespace + "' but found '" + currentNamespace + "'.");
@@ -107,12 +124,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
       throw new BuilderException("cache-ref element requires a namespace attribute.");
     }
     try {
+      // 标记未解决
       unresolvedCacheRef = true;
+      // 获得Cache对象
       Cache cache = configuration.getCache(namespace);
+      // 为空则抛出异常
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");
       }
+      // 记录当前的Cache对象
       currentCache = cache;
+      // 标记已解决
       unresolvedCacheRef = false;
       return cache;
     } catch (IllegalArgumentException e) {
@@ -179,14 +201,19 @@ public class MapperBuilderAssistant extends BaseBuilder {
       Discriminator discriminator,
       List<ResultMapping> resultMappings,
       Boolean autoMapping) {
+    // 获得ResultMap编号，格式为${namespace}.${id}
     id = applyCurrentNamespace(id, false);
+    // 获取完整的extend属性，格式为${namespace}.${extend}
     extend = applyCurrentNamespace(extend, true);
 
+    // 如果有父类，则将父类的ResultMap集合添加到resultMappings中
     if (extend != null) {
+      // 如果extend对应的ResultMap对象不存在，则抛出异常
       if (!configuration.hasResultMap(extend)) {
         throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
       }
       ResultMap resultMap = configuration.getResultMap(extend);
+      // 获取 extend 的 ResultMap 对象的 ResultMapping 集合，并移除 resultMappings
       List<ResultMapping> extendedResultMappings = new ArrayList<>(resultMap.getResultMappings());
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
@@ -367,8 +394,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
+    // 解析对应的Java Type类和TypeHandler对象
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    // 解析组合字段名称
     List<ResultMapping> composites = parseCompositeColumnName(column);
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
@@ -388,6 +417,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   private Set<String> parseMultipleColumnNames(String columnName) {
     Set<String> columns = new HashSet<>();
     if (columnName != null) {
+      // 多个字段，使用,分隔
       if (columnName.indexOf(',') > -1) {
         StringTokenizer parser = new StringTokenizer(columnName, "{}, ", false);
         while (parser.hasMoreTokens()) {
@@ -403,6 +433,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
   private List<ResultMapping> parseCompositeColumnName(String columnName) {
     List<ResultMapping> composites = new ArrayList<>();
+    // 分词，解析其中的property和column的组合对
     if (columnName != null && (columnName.indexOf('=') > -1 || columnName.indexOf(',') > -1)) {
       StringTokenizer parser = new StringTokenizer(columnName, "{}=, ", false);
       while (parser.hasMoreTokens()) {
