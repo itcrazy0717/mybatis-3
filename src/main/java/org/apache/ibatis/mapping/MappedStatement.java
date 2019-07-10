@@ -294,12 +294,16 @@ public final class MappedStatement {
   }
 
   public BoundSql getBoundSql(Object parameterObject) {
+    // 获得BoundSql对象
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    // <parameterMap/>已废弃
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
+    // 判断传入的参数中，是否有内嵌的结果ResultMap，如果有则修改hasNestedResultMaps为true
+    // 存储过程相关，目前基本不用的
     // check for nested result maps in parameter mappings (issue #30)
     for (ParameterMapping pm : boundSql.getParameterMappings()) {
       String rmId = pm.getResultMapId();
