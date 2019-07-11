@@ -51,39 +51,52 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
+    //  获得遍历的集合的Iterable对象，用于遍历
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
     }
     boolean first = true;
+    // 添加open到sql中
     applyOpen(context);
     int i = 0;
     for (Object o : iterable) {
+      // 记录原始的context对象
       DynamicContext oldContext = context;
       if (first || separator == null) {
+        // 生成新的context 拼接开始
         context = new PrefixedContext(context, "");
       } else {
+        // 拼接分隔符
         context = new PrefixedContext(context, separator);
       }
+      // 获得唯一编号
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
+      // 对map对象进行处理
       if (o instanceof Map.Entry) {
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
+      // 对其他集合进行处理
       } else {
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 执行contents的应用
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
+      // 判断prefix是否已经插入
       if (first) {
         first = !((PrefixedContext) context).isPrefixApplied();
       }
+      // 恢复原始的context对象
       context = oldContext;
       i++;
     }
+    // 添加close到sql中
     applyClose(context);
+    // 移除index和item对应的绑定
     context.getBindings().remove(item);
     context.getBindings().remove(index);
     return true;
@@ -148,6 +161,7 @@ public class ForEachSqlNode implements SqlNode {
       return delegate.getSql();
     }
 
+    // 替换<foreach/>标签中的变量
     @Override
     public void appendSql(String sql) {
       GenericTokenParser parser = new GenericTokenParser("#{", "}", content -> {

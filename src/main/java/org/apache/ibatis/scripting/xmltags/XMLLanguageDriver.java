@@ -35,11 +35,13 @@ public class XMLLanguageDriver implements LanguageDriver {
 
   @Override
   public ParameterHandler createParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+    // 创建DefaultParameterHandler对象
     return new DefaultParameterHandler(mappedStatement, parameterObject, boundSql);
   }
 
   @Override
   public SqlSource createSqlSource(Configuration configuration, XNode script, Class<?> parameterType) {
+    // 创建XMLScriptBuilder对象，并执行解析
     XMLScriptBuilder builder = new XMLScriptBuilder(configuration, script, parameterType);
     return builder.parseScriptNode();
   }
@@ -47,16 +49,23 @@ public class XMLLanguageDriver implements LanguageDriver {
   @Override
   public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
     // issue #3
+    // 如果是<script>开头，则使用xml配置的方法，使用动态sql
     if (script.startsWith("<script>")) {
+      // 创建XpathParser对象，解析<script/>节点
       XPathParser parser = new XPathParser(script, false, configuration.getVariables(), new XMLMapperEntityResolver());
+      // 创建SqlSource对象
       return createSqlSource(configuration, parser.evalNode("/script"), parameterType);
     } else {
       // issue #127
+      // 变量替换
       script = PropertyParser.parse(script, configuration.getVariables());
+      // 创建TextSqlNode对象
       TextSqlNode textSqlNode = new TextSqlNode(script);
+      // 如果是动态sql，则创建DynamicSqlSource对象
       if (textSqlNode.isDynamic()) {
         return new DynamicSqlSource(configuration, textSqlNode);
       } else {
+       // 如果是非动态sql，则创建RawSqlSource对象
         return new RawSqlSource(configuration, script, parameterType);
       }
     }

@@ -113,6 +113,7 @@ public class Reflector {
     // 初始化readablePropertyNames、writablePropertyNames、caseInsensitivePropertyMap属性
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
     writablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+    // 将所有属性名的大写
     for (String propName : readablePropertyNames) {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
@@ -126,7 +127,7 @@ public class Reflector {
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
     // 遍历所有构造方法，查找无参的构造方法
     for (Constructor<?> constructor : consts) {
-      // 构造方法无参数，则为默认构造方法
+      // 为defaultConstructor赋值，查找默认构造函数
       if (constructor.getParameterTypes().length == 0) {
         // 赋值给defaultConstructor
         this.defaultConstructor = constructor;
@@ -152,6 +153,12 @@ public class Reflector {
         // 获得属性 如：getId，其属性就是id，其实该方法就是一个字符串的截取
         name = PropertyNamer.methodToProperty(name);
         // 添加到conflictingGetters集合中
+        /*
+         * 将冲突的方法添加到 conflictingGetters 中。考虑这样一种情况：
+         * getTitle 和 isTitle 两个方法经过 methodToProperty 处理，
+         * 均得到 name = title，这会导致冲突。
+         * 对于冲突的方法，这里先统一起存起来，后续再解决冲突
+         */
         addMethodConflict(conflictingGetters, name, method);
       }
     }
@@ -195,10 +202,10 @@ public class Reflector {
           // 如果winnerType是candidateType的子类，则winnerType不变，因为子类可能更为具体
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
-        // 如果candidateType是winner子类，则winner更新为candidateType
+          // 如果candidateType是winner子类，则winner更新为candidateType
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
-        // 返回类型冲突，抛出异常
+          // 返回类型冲突，抛出异常
         } else {
           throw new ReflectionException(
             "Illegal overloaded getter method with ambiguous type for property "
@@ -236,6 +243,11 @@ public class Reflector {
           // 获得属性 就是获得set后面的单词，如setId，这里就是获取Id
           name = PropertyNamer.methodToProperty(name);
           // 添加到conflictingSetters集合中
+          /*
+           * setter 方法发生冲突原因是：可能存在重载情况，比如：
+           *  void setSex(int sex);
+           *  void setSex(SexEnum sex);
+           */
           addMethodConflict(conflictingSetters, name, method);
         }
       }
@@ -253,8 +265,9 @@ public class Reflector {
     // 遍历每个属性，查找最匹配的方法，因为子类可以覆写父类的方法，所以每一个属性，可能对应多个setting方法
     for (String propName : conflictingSetters.keySet()) {
       List<Method> setters = conflictingSetters.get(propName);
-      /**
-       * 获取getter方法的返回值类型，通过返回值类型反推哪个setter更合适
+      /*
+       * 获取 getter 方法的返回值类型，由于 getter 方法不存在重载的情况，
+       * 所以可以用它的返回值类型反推哪个 setter 的更为合适
        */
       Class<?> getterType = getTypes.get(propName);
       Method match = null;
@@ -300,7 +313,7 @@ public class Reflector {
     // 如果参数2可以赋值给参数1，即参数2是参数1的子类，则认为参数2对应的setter方法更合适
     if (paramType1.isAssignableFrom(paramType2)) {
       return setter2;
-    // 如果参数1可以赋值给参数2，即参数1是参数2的子类，则认为参数1对应的setter方法更合适
+      // 如果参数1可以赋值给参数2，即参数1是参数2的子类，则认为参数1对应的setter方法更合适
     } else if (paramType2.isAssignableFrom(paramType1)) {
       return setter1;
     }
@@ -325,10 +338,10 @@ public class Reflector {
     // 普通类型，直接使用类
     if (src instanceof Class) {
       result = (Class<?>) src;
-    // 泛型类型，使用泛型
+      // 泛型类型，使用泛型
     } else if (src instanceof ParameterizedType) {
       result = (Class<?>) ((ParameterizedType) src).getRawType();
-    // 泛型数组，获得具体类
+      // 泛型数组，获得具体类
     } else if (src instanceof GenericArrayType) {
       Type componentType = ((GenericArrayType) src).getGenericComponentType();
       // 普通类型
@@ -352,7 +365,7 @@ public class Reflector {
     Field[] fields = clazz.getDeclaredFields();
     // 进行遍历
     for (Field field : fields) {
-       // 添加到setMethods和setTypes中
+      // 添加到setMethods和setTypes中
       if (!setMethods.containsKey(field.getName())) {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
@@ -600,6 +613,7 @@ public class Reflector {
 
   /**
    * 不区分大小写的属性集合
+   *
    * @param name
    * @return
    */

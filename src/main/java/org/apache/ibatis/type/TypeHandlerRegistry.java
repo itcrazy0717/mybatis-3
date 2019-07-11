@@ -318,17 +318,21 @@ public final class TypeHandlerRegistry {
   @SuppressWarnings("unchecked")
   public <T> void register(TypeHandler<T> typeHandler) {
     boolean mappedTypeFound = false;
+    // 获取 @MappedTypes 注解
     MappedTypes mappedTypes = typeHandler.getClass().getAnnotation(MappedTypes.class);
     if (mappedTypes != null) {
+      // 遍历注解中的值
       for (Class<?> handledType : mappedTypes.value()) {
         register(handledType, typeHandler);
         mappedTypeFound = true;
       }
     }
     // @since 3.1.0 - try to auto-discover the mapped type
+    // 自动发现发射类型
     if (!mappedTypeFound && typeHandler instanceof TypeReference) {
       try {
         TypeReference<T> typeReference = (TypeReference<T>) typeHandler;
+        // 获取参数模板中的参数，并调用register进行注册
         register(typeReference.getRawType(), typeHandler);
         mappedTypeFound = true;
       } catch (Throwable t) {
@@ -347,8 +351,10 @@ public final class TypeHandlerRegistry {
   }
 
   private <T> void register(Type javaType, TypeHandler<? extends T> typeHandler) {
+    // 获取@MappedJdbcTypes注解
     MappedJdbcTypes mappedJdbcTypes = typeHandler.getClass().getAnnotation(MappedJdbcTypes.class);
     if (mappedJdbcTypes != null) {
+      // 遍历@MappedJdbcTypes注解中配置的值
       for (JdbcType handledJdbcType : mappedJdbcTypes.value()) {
         register(javaType, handledJdbcType, typeHandler);
       }
@@ -372,9 +378,11 @@ public final class TypeHandlerRegistry {
 
   private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> handler) {
     if (javaType != null) {
+      // jdbcType到TypeHandler的映射
       Map<JdbcType, TypeHandler<?>> map = typeHandlerMap.get(javaType);
       if (map == null || map == NULL_TYPE_HANDLER_MAP) {
         map = new HashMap<>();
+        // 存储javaType到Map<JdbcType, TypeHandler<?>>映射
         typeHandlerMap.put(javaType, map);
       }
       map.put(jdbcType, handler);
@@ -390,8 +398,10 @@ public final class TypeHandlerRegistry {
 
   public void register(Class<?> typeHandlerClass) {
     boolean mappedTypeFound = false;
+    // 获取@MappedTypes注解
     MappedTypes mappedTypes = typeHandlerClass.getAnnotation(MappedTypes.class);
     if (mappedTypes != null) {
+      // 遍历@MappedTypes注解中配置的值
       for (Class<?> javaTypeClass : mappedTypes.value()) {
         register(javaTypeClass, typeHandlerClass);
         mappedTypeFound = true;
@@ -444,10 +454,12 @@ public final class TypeHandlerRegistry {
 
   public void register(String packageName) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
+    // 从指定包中查找TypeHandler
     resolverUtil.find(new ResolverUtil.IsA(TypeHandler.class), packageName);
     Set<Class<? extends Class<?>>> handlerSet = resolverUtil.getClasses();
     for (Class<?> type : handlerSet) {
       //Ignore inner classes and interfaces (including package-info.java) and abstract classes
+      // 忽略内部类、接口、抽象类
       if (!type.isAnonymousClass() && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) {
         register(type);
       }

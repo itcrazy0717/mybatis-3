@@ -47,6 +47,7 @@ public class TypeAliasRegistry {
    * 另外，在{@link org.apache.ibatis.session.Configuration}构造方法中，也有默认的注册
    */
   public TypeAliasRegistry() {
+    // 进行别名的注册 这样在<select/>标签的resultType属性中，就不用写全类名了，直接用别名即可
     registerAlias("string", String.class);
 
     registerAlias("byte", Byte.class);
@@ -146,6 +147,11 @@ public class TypeAliasRegistry {
    */
   public void registerAliases(String packageName, Class<?> superType) {
     // 获得指定包下的类
+    /*
+     * 查找某个包下的父类为 superType 的类。从调用栈来看，这里的
+     * superType = Object.class，所以 ResolverUtil 将查找所有的类。
+     * 查找完成后，查找结果将会被缓存到内部集合中。
+     */
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
     Set<Class<? extends Class<?>>> typeSet = resolverUtil.getClasses();
@@ -161,7 +167,7 @@ public class TypeAliasRegistry {
   }
 
   public void registerAlias(Class<?> type) {
-    // 默认为，简单类名
+    // 默认为，简单类名 获取全路径类名的简称
     String alias = type.getSimpleName();
     // 如果有注解，则使用注解上的名字
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
