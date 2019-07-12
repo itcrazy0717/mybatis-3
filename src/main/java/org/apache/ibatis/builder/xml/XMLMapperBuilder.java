@@ -141,7 +141,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       }
       // 设置namespace属性
       builderAssistant.setCurrentNamespace(namespace);
-      // 解析<cache-ref/>节点  <cache-ref namespace="com.someone.application.data.SomeMapper"/>
+      // 解析<cache-ref/>节点 <cache-ref namespace="com.someone.application.data.SomeMapper"/>
       cacheRefElement(context.evalNode("cache-ref"));
       // 解析<cache/>节点
       cacheElement(context.evalNode("cache"));
@@ -171,6 +171,10 @@ public class XMLMapperBuilder extends BaseBuilder {
       // 创建XMLStatementBuilder对象，执行解析
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
+        /*
+         * 解析 Statement 节点，并将解析结果存储到
+         * configuration 的 mappedStatements 集合中
+         */
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         // 解析失败，添加到configuration中
@@ -346,6 +350,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     for (XNode resultChild : resultChildren) {
       // 处理constructor节点，一般来说不会使用该属性
       if ("constructor".equals(resultChild.getName())) {
+        // 生成相应的ResultMapping
         processConstructorElement(resultChild, typeClass, resultMappings);
       // 处理discriminator节点，在日常业务中也没发现该属性的使用
       } else if ("discriminator".equals(resultChild.getName())) {
@@ -354,8 +359,10 @@ public class XMLMapperBuilder extends BaseBuilder {
       } else {
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
+          // 添加ID到flags集合中
           flags.add(ResultFlag.ID);
         }
+        // 解析id和property节点，并生成相应的ResultMapping
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
@@ -369,6 +376,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     // 创建ResultMapResolver对象，执行解析
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
+      // 根据前面获取到的信息构建ResultMap对象
       return resultMapResolver.resolve();
     } catch (IncompleteElementException e) {
       // 解析失败，添加到configuration中
@@ -446,11 +454,12 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private boolean databaseIdMatchesCurrent(String id, String databaseId, String requiredDatabaseId) {
+    // 这里的写法还是有点小骚气
     if (requiredDatabaseId != null) {
       // 如果不匹配，直接返回false
       return requiredDatabaseId.equals(databaseId);
     }
-    // 如果requiredDatabaseId为空，但databaseId已存在，还是不匹配，返回false
+    // 如果requiredDatabaseId为空，但databaseId已存在，还是不匹配，因为两者不一致，返回false
     if (databaseId != null) {
       return false;
     }
@@ -504,12 +513,15 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private String processNestedResultMappings(XNode context, List<ResultMapping> resultMappings, Class<?> enclosingType) throws Exception {
+    // 判断节点名称
     if ("association".equals(context.getName())
         || "collection".equals(context.getName())
         || "case".equals(context.getName())) {
       if (context.getStringAttribute("select") == null) {
         validateCollection(context, enclosingType);
+        // resultMapElement 是解析 ResultMap 入口方法
         ResultMap resultMap = resultMapElement(context, resultMappings, enclosingType);
+        // 返回 resultMap id
         return resultMap.getId();
       }
     }

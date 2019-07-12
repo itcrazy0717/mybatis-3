@@ -134,6 +134,7 @@ public class ResultMapping {
 
     public ResultMapping build() {
       // lock down collections
+      // 将 flags 和 composites 两个集合变为不可修改集合
       resultMapping.flags = Collections.unmodifiableList(resultMapping.flags);
       resultMapping.composites = Collections.unmodifiableList(resultMapping.composites);
       resolveTypeHandler();

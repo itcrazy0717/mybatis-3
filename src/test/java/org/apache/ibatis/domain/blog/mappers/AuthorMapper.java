@@ -27,6 +27,8 @@ import org.apache.ibatis.session.ResultHandler;
 
 public interface AuthorMapper {
 
+  Author findOne(int id);
+
   List<Author> selectAllAuthors();
 
   Set<Author> selectAllAuthorsSet();

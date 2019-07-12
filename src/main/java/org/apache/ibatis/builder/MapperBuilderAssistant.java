@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.builder;
 
@@ -92,7 +92,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     // 如果currentNamespace已经设置，并且与传入的不相等，则抛出异常
     if (this.currentNamespace != null && !this.currentNamespace.equals(currentNamespace)) {
       throw new BuilderException("Wrong namespace. Expected '"
-          + this.currentNamespace + "' but found '" + currentNamespace + "'.");
+                                 + this.currentNamespace + "' but found '" + currentNamespace + "'.");
     }
 
     this.currentNamespace = currentNamespace;
@@ -126,9 +126,15 @@ public class MapperBuilderAssistant extends BaseBuilder {
     try {
       // 标记未解决
       unresolvedCacheRef = true;
-      // 获得Cache对象
+      // 根据命名空间从全局配置对象（Configuration）中查找相应的缓存实例
       Cache cache = configuration.getCache(namespace);
-      // 为空则抛出异常
+      /*
+       * 若未查找到缓存实例，此处抛出异常。这里存在两种情况导致未查找到 cache 实例，
+       * 分别如下：
+       *     1.使用者在 <cache-ref> 中配置了一个不存在的命名空间，
+       *       导致无法找到 cache 实例
+       *     2.使用者所引用的缓存实例还未创建
+       */
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");
       }
@@ -143,22 +149,26 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public Cache useNewCache(Class<? extends Cache> typeClass,
-      Class<? extends Cache> evictionClass,
-      Long flushInterval,
-      Integer size,
-      boolean readWrite,
-      boolean blocking,
-      Properties props) {
+                           Class<? extends Cache> evictionClass,
+                           Long flushInterval,
+                           Integer size,
+                           boolean readWrite,
+                           boolean blocking,
+                           Properties props) {
+
+    // 使用建造模式构建缓存实例
     Cache cache = new CacheBuilder(currentNamespace)
-        .implementation(valueOrDefault(typeClass, PerpetualCache.class))
-        .addDecorator(valueOrDefault(evictionClass, LruCache.class))
-        .clearInterval(flushInterval)
-        .size(size)
-        .readWrite(readWrite)
-        .blocking(blocking)
-        .properties(props)
-        .build();
+      .implementation(valueOrDefault(typeClass, PerpetualCache.class))
+      .addDecorator(valueOrDefault(evictionClass, LruCache.class))
+      .clearInterval(flushInterval)
+      .size(size)
+      .readWrite(readWrite)
+      .blocking(blocking)
+      .properties(props)
+      .build();
+    // 添加缓存到Configuration对象中
     configuration.addCache(cache);
+    // 设置当前缓存
     currentCache = cache;
     return cache;
   }
@@ -171,14 +181,14 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public ParameterMapping buildParameterMapping(
-      Class<?> parameterType,
-      String property,
-      Class<?> javaType,
-      JdbcType jdbcType,
-      String resultMap,
-      ParameterMode parameterMode,
-      Class<? extends TypeHandler<?>> typeHandler,
-      Integer numericScale) {
+    Class<?> parameterType,
+    String property,
+    Class<?> javaType,
+    JdbcType jdbcType,
+    String resultMap,
+    ParameterMode parameterMode,
+    Class<? extends TypeHandler<?>> typeHandler,
+    Integer numericScale) {
     resultMap = applyCurrentNamespace(resultMap, true);
 
     // Class parameterType = parameterMapBuilder.type();
@@ -186,21 +196,21 @@ public class MapperBuilderAssistant extends BaseBuilder {
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
 
     return new ParameterMapping.Builder(configuration, property, javaTypeClass)
-        .jdbcType(jdbcType)
-        .resultMapId(resultMap)
-        .mode(parameterMode)
-        .numericScale(numericScale)
-        .typeHandler(typeHandlerInstance)
-        .build();
+      .jdbcType(jdbcType)
+      .resultMapId(resultMap)
+      .mode(parameterMode)
+      .numericScale(numericScale)
+      .typeHandler(typeHandlerInstance)
+      .build();
   }
 
   public ResultMap addResultMap(
-      String id,
-      Class<?> type,
-      String extend,
-      Discriminator discriminator,
-      List<ResultMapping> resultMappings,
-      Boolean autoMapping) {
+    String id,
+    Class<?> type,
+    String extend,
+    Discriminator discriminator,
+    List<ResultMapping> resultMappings,
+    Boolean autoMapping) {
     // 获得ResultMap编号，格式为${namespace}.${id}
     id = applyCurrentNamespace(id, false);
     // 获取完整的extend属性，格式为${namespace}.${extend}
@@ -218,46 +228,52 @@ public class MapperBuilderAssistant extends BaseBuilder {
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
       boolean declaresConstructor = false;
+      // 检测当前 resultMappings 集合中是否包含 CONSTRUCTOR 标志的元素
       for (ResultMapping resultMapping : resultMappings) {
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
           declaresConstructor = true;
           break;
         }
       }
+      /*
+       * 如果当前 <resultMap> 节点中包含 <constructor> 子节点，
+       * 则将拓展 ResultMapping 集合中的包含 CONSTRUCTOR 标志的元素移除
+       */
       if (declaresConstructor) {
         extendedResultMappings.removeIf(resultMapping -> resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR));
       }
+      // 将扩展 resultMappings 集合合并到当前 resultMappings 集合中
       resultMappings.addAll(extendedResultMappings);
     }
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
-        .discriminator(discriminator)
-        .build();
+      .discriminator(discriminator)
+      .build();
     configuration.addResultMap(resultMap);
     return resultMap;
   }
 
   public Discriminator buildDiscriminator(
-      Class<?> resultType,
-      String column,
-      Class<?> javaType,
-      JdbcType jdbcType,
-      Class<? extends TypeHandler<?>> typeHandler,
-      Map<String, String> discriminatorMap) {
+    Class<?> resultType,
+    String column,
+    Class<?> javaType,
+    JdbcType jdbcType,
+    Class<? extends TypeHandler<?>> typeHandler,
+    Map<String, String> discriminatorMap) {
     ResultMapping resultMapping = buildResultMapping(
-        resultType,
-        null,
-        column,
-        javaType,
-        jdbcType,
-        null,
-        null,
-        null,
-        null,
-        typeHandler,
-        new ArrayList<>(),
-        null,
-        null,
-        false);
+      resultType,
+      null,
+      column,
+      javaType,
+      jdbcType,
+      null,
+      null,
+      null,
+      null,
+      typeHandler,
+      new ArrayList<>(),
+      null,
+      null,
+      false);
     Map<String, String> namespaceDiscriminatorMap = new HashMap<>();
     for (Map.Entry<String, String> e : discriminatorMap.entrySet()) {
       String resultMap = e.getValue();
@@ -268,26 +284,26 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public MappedStatement addMappedStatement(
-      String id,
-      SqlSource sqlSource,
-      StatementType statementType,
-      SqlCommandType sqlCommandType,
-      Integer fetchSize,
-      Integer timeout,
-      String parameterMap,
-      Class<?> parameterType,
-      String resultMap,
-      Class<?> resultType,
-      ResultSetType resultSetType,
-      boolean flushCache,
-      boolean useCache,
-      boolean resultOrdered,
-      KeyGenerator keyGenerator,
-      String keyProperty,
-      String keyColumn,
-      String databaseId,
-      LanguageDriver lang,
-      String resultSets) {
+    String id,
+    SqlSource sqlSource,
+    StatementType statementType,
+    SqlCommandType sqlCommandType,
+    Integer fetchSize,
+    Integer timeout,
+    String parameterMap,
+    Class<?> parameterType,
+    String resultMap,
+    Class<?> resultType,
+    ResultSetType resultSetType,
+    boolean flushCache,
+    boolean useCache,
+    boolean resultOrdered,
+    KeyGenerator keyGenerator,
+    String keyProperty,
+    String keyColumn,
+    String databaseId,
+    LanguageDriver lang,
+    String resultSets) {
 
     if (unresolvedCacheRef) {
       throw new IncompleteElementException("Cache-ref not yet resolved");
@@ -297,22 +313,22 @@ public class MapperBuilderAssistant extends BaseBuilder {
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
 
     MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlSource, sqlCommandType)
-        .resource(resource)
-        .fetchSize(fetchSize)
-        .timeout(timeout)
-        .statementType(statementType)
-        .keyGenerator(keyGenerator)
-        .keyProperty(keyProperty)
-        .keyColumn(keyColumn)
-        .databaseId(databaseId)
-        .lang(lang)
-        .resultOrdered(resultOrdered)
-        .resultSets(resultSets)
-        .resultMaps(getStatementResultMaps(resultMap, resultType, id))
-        .resultSetType(resultSetType)
-        .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
-        .useCache(valueOrDefault(useCache, isSelect))
-        .cache(currentCache);
+      .resource(resource)
+      .fetchSize(fetchSize)
+      .timeout(timeout)
+      .statementType(statementType)
+      .keyGenerator(keyGenerator)
+      .keyProperty(keyProperty)
+      .keyColumn(keyColumn)
+      .databaseId(databaseId)
+      .lang(lang)
+      .resultOrdered(resultOrdered)
+      .resultSets(resultSets)
+      .resultMaps(getStatementResultMaps(resultMap, resultType, id))
+      .resultSetType(resultSetType)
+      .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
+      .useCache(valueOrDefault(useCache, isSelect))
+      .cache(currentCache);
 
     ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
     if (statementParameterMap != null) {
@@ -329,9 +345,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   private ParameterMap getStatementParameterMap(
-      String parameterMapName,
-      Class<?> parameterTypeClass,
-      String statementId) {
+    String parameterMapName,
+    Class<?> parameterTypeClass,
+    String statementId) {
     parameterMapName = applyCurrentNamespace(parameterMapName, true);
     ParameterMap parameterMap = null;
     if (parameterMapName != null) {
@@ -343,18 +359,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
     } else if (parameterTypeClass != null) {
       List<ParameterMapping> parameterMappings = new ArrayList<>();
       parameterMap = new ParameterMap.Builder(
-          configuration,
-          statementId + "-Inline",
-          parameterTypeClass,
-          parameterMappings).build();
+        configuration,
+        statementId + "-Inline",
+        parameterTypeClass,
+        parameterMappings).build();
     }
     return parameterMap;
   }
 
   private List<ResultMap> getStatementResultMaps(
-      String resultMap,
-      Class<?> resultType,
-      String statementId) {
+    String resultMap,
+    Class<?> resultType,
+    String statementId) {
     resultMap = applyCurrentNamespace(resultMap, true);
 
     List<ResultMap> resultMaps = new ArrayList<>();
@@ -369,49 +385,57 @@ public class MapperBuilderAssistant extends BaseBuilder {
       }
     } else if (resultType != null) {
       ResultMap inlineResultMap = new ResultMap.Builder(
-          configuration,
-          statementId + "-Inline",
-          resultType,
-          new ArrayList<>(),
-          null).build();
+        configuration,
+        statementId + "-Inline",
+        resultType,
+        new ArrayList<>(),
+        null).build();
       resultMaps.add(inlineResultMap);
     }
     return resultMaps;
   }
 
   public ResultMapping buildResultMapping(
-      Class<?> resultType,
-      String property,
-      String column,
-      Class<?> javaType,
-      JdbcType jdbcType,
-      String nestedSelect,
-      String nestedResultMap,
-      String notNullColumn,
-      String columnPrefix,
-      Class<? extends TypeHandler<?>> typeHandler,
-      List<ResultFlag> flags,
-      String resultSet,
-      String foreignColumn,
-      boolean lazy) {
+    Class<?> resultType,
+    String property,
+    String column,
+    Class<?> javaType,
+    JdbcType jdbcType,
+    String nestedSelect,
+    String nestedResultMap,
+    String notNullColumn,
+    String columnPrefix,
+    Class<? extends TypeHandler<?>> typeHandler,
+    List<ResultFlag> flags,
+    String resultSet,
+    String foreignColumn,
+    boolean lazy) {
+
+    /*
+     * 若 javaType 为空，这里根据 property 的属性进行解析。关于下面方法中的参数，
+     * 这里说明一下：
+     *   - resultType：即 <resultMap type="xxx"/> 中的 type 属性
+     *   - property：即 <result property="xxx"/> 中的 property 属性
+     */
     // 解析对应的Java Type类和TypeHandler对象
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    // 解析TypeHandler
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
     // 解析组合字段名称
     List<ResultMapping> composites = parseCompositeColumnName(column);
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
-        .jdbcType(jdbcType)
-        .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
-        .nestedResultMapId(applyCurrentNamespace(nestedResultMap, true))
-        .resultSet(resultSet)
-        .typeHandler(typeHandlerInstance)
-        .flags(flags == null ? new ArrayList<>() : flags)
-        .composites(composites)
-        .notNullColumns(parseMultipleColumnNames(notNullColumn))
-        .columnPrefix(columnPrefix)
-        .foreignColumn(foreignColumn)
-        .lazy(lazy)
-        .build();
+      .jdbcType(jdbcType)
+      .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
+      .nestedResultMapId(applyCurrentNamespace(nestedResultMap, true))
+      .resultSet(resultSet)
+      .typeHandler(typeHandlerInstance)
+      .flags(flags == null ? new ArrayList<>() : flags)
+      .composites(composites)
+      .notNullColumns(parseMultipleColumnNames(notNullColumn))
+      .columnPrefix(columnPrefix)
+      .foreignColumn(foreignColumn)
+      .lazy(lazy)
+      .build();
   }
 
   private Set<String> parseMultipleColumnNames(String columnName) {
@@ -440,7 +464,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         String property = parser.nextToken();
         String column = parser.nextToken();
         ResultMapping complexResultMapping = new ResultMapping.Builder(
-            configuration, property, column, configuration.getTypeHandlerRegistry().getUnknownTypeHandler()).build();
+          configuration, property, column, configuration.getTypeHandlerRegistry().getUnknownTypeHandler()).build();
         composites.add(complexResultMapping);
       }
     }
@@ -479,10 +503,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return javaType;
   }
 
-  /** Backward compatibility signature. */
+  /**
+   * Backward compatibility signature.
+   */
   public ResultMapping buildResultMapping(Class<?> resultType, String property, String column, Class<?> javaType,
-      JdbcType jdbcType, String nestedSelect, String nestedResultMap, String notNullColumn, String columnPrefix,
-      Class<? extends TypeHandler<?>> typeHandler, List<ResultFlag> flags) {
+                                          JdbcType jdbcType, String nestedSelect, String nestedResultMap, String notNullColumn, String columnPrefix,
+                                          Class<? extends TypeHandler<?>> typeHandler, List<ResultFlag> flags) {
     return buildResultMapping(
       resultType, property, column, javaType, jdbcType, nestedSelect,
       nestedResultMap, notNullColumn, columnPrefix, typeHandler, flags, null, null, configuration.isLazyLoadingEnabled());
@@ -496,12 +522,14 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return configuration.getLanguageDriver(langClass);
   }
 
-  /** Backward compatibility signature. */
+  /**
+   * Backward compatibility signature.
+   */
   public MappedStatement addMappedStatement(String id, SqlSource sqlSource, StatementType statementType,
-      SqlCommandType sqlCommandType, Integer fetchSize, Integer timeout, String parameterMap, Class<?> parameterType,
-      String resultMap, Class<?> resultType, ResultSetType resultSetType, boolean flushCache, boolean useCache,
-      boolean resultOrdered, KeyGenerator keyGenerator, String keyProperty, String keyColumn, String databaseId,
-      LanguageDriver lang) {
+                                            SqlCommandType sqlCommandType, Integer fetchSize, Integer timeout, String parameterMap, Class<?> parameterType,
+                                            String resultMap, Class<?> resultType, ResultSetType resultSetType, boolean flushCache, boolean useCache,
+                                            boolean resultOrdered, KeyGenerator keyGenerator, String keyProperty, String keyColumn, String databaseId,
+                                            LanguageDriver lang) {
     return addMappedStatement(
       id, sqlSource, statementType, sqlCommandType, fetchSize, timeout,
       parameterMap, parameterType, resultMap, resultType, resultSetType,

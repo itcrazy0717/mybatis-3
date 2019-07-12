@@ -61,12 +61,24 @@ public class XMLIncludeTransformer {
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     // 如果是<include/>标签
     if (source.getNodeName().equals("include")) {
-      // 获取<sql/>对应的节点
+      /*
+       * 获取 <sql> 节点。若 refid 中包含属性占位符 ${}，
+       * 则需先将属性占位符替换为对应的属性值
+       */
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
-      // 获得包含<include/>标签内的属性
+      /*
+       * 解析 <include> 的子节点 <property>，并将解析结果与 variablesContext 融合，
+       * 然后返回融合后的 Properties。若 <property> 节点的 value 属性中存在占位符 ${}，
+       * 则将占位符替换为对应的属性值
+       */
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
       // 递归调用，继续替换，注意，此处是<sql/>对应的节点
       applyIncludes(toInclude, toIncludeContext, true);
+
+      /*
+       * 如果 <sql> 和 <include> 节点不在一个文档中，
+       * 则从其他文档中将 <sql> 节点引入到 <include> 所在文档中
+       */
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
@@ -86,6 +98,7 @@ public class XMLIncludeTransformer {
         NamedNodeMap attributes = source.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
           Node attr = attributes.item(i);
+          // 将 source 节点属性中的占位符 ${} 替换成具体的属性值
           attr.setNodeValue(PropertyParser.parse(attr.getNodeValue(), variablesContext));
         }
       }

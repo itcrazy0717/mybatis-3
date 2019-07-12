@@ -90,15 +90,24 @@ public class CacheBuilder {
   }
 
   public Cache build() {
+
+    // 设置默认的缓存类型(PerpetualCache)和缓存装饰器(LruCache)
     setDefaultImplementations();
+
+    // 通过反射创建缓存
     Cache cache = newBaseCacheInstance(implementation, id);
     setCacheProperties(cache);
     // issue #352, do not apply decorators to custom caches
+    // 仅对内置缓存 PerpetualCache 应用装饰器
     if (PerpetualCache.class.equals(cache.getClass())) {
+      // 遍历装饰器集合，应用装饰器
       for (Class<? extends Cache> decorator : decorators) {
+        // 通过反射创建装饰器实例
         cache = newCacheDecoratorInstance(decorator, cache);
+        // 设置属性值到缓存实例中
         setCacheProperties(cache);
       }
+      // 应用标准的装饰器，比如 LoggingCache、SynchronizedCache
       cache = setStandardDecorators(cache);
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
       cache = new LoggingCache(cache);
@@ -108,8 +117,10 @@ public class CacheBuilder {
 
   private void setDefaultImplementations() {
     if (implementation == null) {
+      // 设置默认的缓存实现类
       implementation = PerpetualCache.class;
       if (decorators.isEmpty()) {
+        // 添加LruCache装饰器
         decorators.add(LruCache.class);
       }
     }
@@ -117,20 +128,32 @@ public class CacheBuilder {
 
   private Cache setStandardDecorators(Cache cache) {
     try {
+
+      // 创建“元信息”对象
       MetaObject metaCache = SystemMetaObject.forObject(cache);
       if (size != null && metaCache.hasSetter("size")) {
+        // 设置 size 属性
         metaCache.setValue("size", size);
       }
+      // 这里使用装饰器模式会具有传递性
       if (clearInterval != null) {
+        // clearInterval 不为空，应用 ScheduledCache 装饰器
         cache = new ScheduledCache(cache);
         ((ScheduledCache) cache).setClearInterval(clearInterval);
       }
       if (readWrite) {
+        // readWrite 为 true，应用 SerializedCache 装饰器
         cache = new SerializedCache(cache);
       }
+
+      /*
+       * 应用 LoggingCache，SynchronizedCache 装饰器，
+       * 使原缓存具备打印日志和线程同步的能力
+       */
       cache = new LoggingCache(cache);
       cache = new SynchronizedCache(cache);
       if (blocking) {
+        // blocking 为 true，应用 BlockingCache 装饰器
         cache = new BlockingCache(cache);
       }
       return cache;
@@ -146,11 +169,23 @@ public class CacheBuilder {
         String name = (String) entry.getKey();
         String value = (String) entry.getValue();
         if (metaCache.hasSetter(name)) {
+          // 获取 setter 方法的参数类型
           Class<?> type = metaCache.getSetterType(name);
+
+          /*
+           * 根据参数类型对属性值进行转换，并将转换后的值
+           * 通过 setter 方法设置到 Cache 实例中
+           */
           if (String.class == type) {
             metaCache.setValue(name, value);
           } else if (int.class == type
               || Integer.class == type) {
+
+            /*
+             * 此处及以下分支包含两个步骤：
+             *   1.类型转换 → Integer.valueOf(value)
+             *   2.将转换后的值设置到缓存实例中 → metaCache.setValue(name, value)
+             */
             metaCache.setValue(name, Integer.valueOf(value));
           } else if (long.class == type
               || Long.class == type) {
@@ -176,6 +211,8 @@ public class CacheBuilder {
         }
       }
     }
+
+    // 如果缓存类实现了 InitializingObject 接口，则调用 initialize 方法执行初始化逻辑
     if (InitializingObject.class.isAssignableFrom(cache.getClass())) {
       try {
         ((InitializingObject) cache).initialize();
