@@ -29,10 +29,26 @@ public class ParameterMapping {
 
   private Configuration configuration;
 
+  /**
+   * 属性的名字
+   */
   private String property;
+
+  /**
+   * 参数类型
+   * 只需要关注ParamterMode.IN的情况，另外OUT、INOUT是在存储过程中使用，暂时无视。
+   */
   private ParameterMode mode;
+
+  /**
+   * Java 类型
+   */
   private Class<?> javaType = Object.class;
   private JdbcType jdbcType;
+
+  /**
+   * 对于数值类型，还有一个小数保留位数的设置，来确定小数点后保留的位数
+   */
   private Integer numericScale;
   private TypeHandler<?> typeHandler;
   private String resultMapId;
