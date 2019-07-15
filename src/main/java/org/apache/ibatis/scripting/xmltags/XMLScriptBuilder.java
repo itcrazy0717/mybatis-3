@@ -67,6 +67,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
 
+  // 初始化nodeHandlerMap集合
   private void initNodeHandlerMap() {
     nodeHandlerMap.put("trim", new TrimHandler());
     nodeHandlerMap.put("where", new WhereHandler());
@@ -116,7 +117,7 @@ public class XMLScriptBuilder extends BaseBuilder {
           // 非动态的TextSqlNode对象，创建StaticTextSqlNode，并添加到contents中
           contents.add(new StaticTextSqlNode(data));
         }
-        // 如果类型是Node.ELEMENT_NODE
+        // 如果类型是Node.ELEMENT_NODE 比如<if/> <where/>
       } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
         // 获得子节点的标签，获取对应的NodeHandler对象
         String nodeName = child.getNode().getNodeName();

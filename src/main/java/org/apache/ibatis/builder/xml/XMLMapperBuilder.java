@@ -202,15 +202,32 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void parsePendingCacheRefs() {
+    // 获取CacheRefResolver列表
     Collection<CacheRefResolver> incompleteCacheRefs = configuration.getIncompleteCacheRefs();
     synchronized (incompleteCacheRefs) {
       Iterator<CacheRefResolver> iter = incompleteCacheRefs.iterator();
+      // 遍历列表
       while (iter.hasNext()) {
         try {
+          /*
+           * 尝试解析 <cache-ref> 节点，若解析失败，则抛出 IncompleteElementException，
+           * 此时下面的删除操作不会被执行
+           */
           iter.next().resolveCacheRef();
+
+          /*
+           * 移除 CacheRefResolver 对象。如果代码能执行到此处，
+           * 表明已成功解析了 <cache-ref> 节点
+           */
           iter.remove();
         } catch (IncompleteElementException e) {
           // Cache ref is still missing a resource...
+
+          /*
+           * 如果再次发生 IncompleteElementException 异常，表明当前映射文件中并没有
+           * <cache-ref> 所引用的缓存。有可能所引用的缓存在后面的映射文件中，所以这里
+           * 不能将解析失败的 CacheRefResolver 从集合中删除
+           */
         }
       }
     }
@@ -551,7 +568,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         //ignore, bound type is not required
       }
       if (boundType != null) {
-        // 不存在该Mapper接口，则进行添加
+        // 检测当前mapper类是否被绑定过
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface
