@@ -27,6 +27,7 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.RowBounds;
 
 /**
+ * 适用于 Oracle、PostgreSQL<br/>
  * @author Clinton Begin
  * @author Jeff Butler
  */
