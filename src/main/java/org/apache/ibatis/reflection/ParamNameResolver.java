@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2018 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.reflection;
 
@@ -53,13 +53,15 @@ public class ParamNameResolver {
   private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
+    // 获取参数类型列表
     final Class<?>[] paramTypes = method.getParameterTypes();
+    // 获取参数注解
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
-      // 如果是特殊参数，则忽略
+      // 检测当前的参数类型是否为 RowBounds 或 ResultHandler
       if (isSpecialParameter(paramTypes[paramIndex])) {
         // skip special parameters
         continue;
@@ -73,15 +75,32 @@ public class ParamNameResolver {
           break;
         }
       }
+      // name为空，表明未给参数配置@Param注解
       if (name == null) {
+        // 检测是否设置了 useActualParamName 全局配置
         // @Param was not specified.
         // 其次，获取真实的参数名
         if (config.isUseActualParamName()) {
+          /*
+           * 通过反射获取参数名称。此种方式要求 JDK 版本为 1.8+，
+           * 且要求编译时加入 -parameters 参数，否则获取到的参数名
+           * 仍然是 arg1, arg2, ..., argN
+           */
           name = getActualParamName(method, paramIndex);
         }
         // 最差，使用map的顺序，作为编号
         if (name == null) {
           // use the parameter index as the name ("0", "1", ...)
+          /*
+           * 使用 map.size() 返回值作为名称，思考一下为什么不这样写：
+           *   name = String.valueOf(paramIndex);
+           * 因为如果参数列表中包含 RowBounds 或 ResultHandler，这两个参数
+           * 会被忽略掉，这样将导致名称不连续。
+           *
+           * 比如参数列表 (int p1, int p2, RowBounds rb, int p3)
+           *  - 期望得到名称列表为 ["0", "1", "2"]
+           *  - 实际得到名称列表为 ["0", "1", "3"]
+           */
           // gcode issue #71
           name = String.valueOf(map.size());
         }
@@ -121,7 +140,7 @@ public class ParamNameResolver {
     // 无参数，则返回null
     if (args == null || paramCount == 0) {
       return null;
-    // 只有一个非注解的参数，直接返回首元素
+      // 只有一个非注解的参数，直接返回首元素
     } else if (!hasParamAnnotation && paramCount == 1) {
       return args[names.firstKey()];
     } else {
