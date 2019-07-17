@@ -50,6 +50,11 @@ class XmlMapperBuilderTest {
     }
   }
 
+  /**
+   * include 标签解析
+   *
+   * @throws Exception
+   */
   @Test
   void IncludeParseTest() throws Exception {
     Configuration configuration = new Configuration();
