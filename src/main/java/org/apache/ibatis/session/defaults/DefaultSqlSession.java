@@ -73,10 +73,14 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <T> T selectOne(String statement, Object parameter) {
     // Popular vote was to return null on 0 results and throw exception on too many.
+    // 调用selectList获取结果
     List<T> list = this.selectList(statement, parameter);
     if (list.size() == 1) {
+      // 返回结果
       return list.get(0);
     } else if (list.size() > 1) {
+      // 如果查询结果大于1则抛出异常，也就是说selectOne只能用于查询出一条结果，上次也出现过该情况
+      // 但是通过读源码，更清晰的了解内部的逻辑
       throw new TooManyResultsException("Expected one result (or null) to be returned by selectOne(), but found: " + list.size());
     } else {
       return null;
@@ -143,7 +147,9 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     try {
+      // 获取MappedStatement对象
       MappedStatement ms = configuration.getMappedStatement(statement);
+      // 调用Executor实现类中的query方法
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

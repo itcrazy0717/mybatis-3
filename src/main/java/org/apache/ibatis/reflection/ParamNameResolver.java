@@ -142,6 +142,14 @@ public class ParamNameResolver {
       return null;
       // 只有一个非注解的参数，直接返回首元素
     } else if (!hasParamAnnotation && paramCount == 1) {
+      /*
+       * 如果方法参数列表无 @Param 注解，且仅有一个非特别参数，则返回该参数的值。
+       * 比如如下方法：
+       *     List findList(RowBounds rb, String name)
+       * names 如下：
+       *     names = {1 : "0"}
+       * 此种情况下，返回 args[names.firstKey()]，即 args[1] -> name
+       */
       return args[names.firstKey()];
     } else {
       // 集合
@@ -151,13 +159,19 @@ public class ParamNameResolver {
       int i = 0;
       // 遍历names集合
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
-        // 组合1：添加到param中
+        // 组合1：添加到param中 添加 <参数名, 参数值> 键值对到 param 中
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
-        // 组合2：添加到param中
+        // 组合2：添加到param中  genericParamName = param + index。比如 param1, param2, ... paramN
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
+        /*
+         * 检测 names 中是否包含 genericParamName，什么情况下会包含？答案如下：
+         *
+         *   使用者显式将参数名称配置为 param1，即 @Param("param1")
+         */
         if (!names.containsValue(genericParamName)) {
+          // 添加 <param*, value> 到 param 中
           param.put(genericParamName, args[entry.getKey()]);
         }
         i++;

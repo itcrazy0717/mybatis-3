@@ -180,16 +180,17 @@ public abstract class BaseExecutor implements Executor {
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       // 获取到，则进行处理
       if (list != null) {
+        // 存储过程相关逻辑
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
-        // 获得不到，则从数据库中查询
+        // 一级缓存未命中，则从数据库中查询
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
       queryStack--;
     }
     if (queryStack == 0) {
-      // 执行延迟加载
+      // 执行延迟加载 从一级缓存中延迟加载嵌套结果查询
       for (DeferredLoad deferredLoad : deferredLoads) {
         deferredLoad.load();
       }

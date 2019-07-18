@@ -64,34 +64,48 @@ public class MapperMethod {
   }
 
   public Object execute(SqlSession sqlSession, Object[] args) {
+    // 根据sql类型执行相应的数据库操作
     Object result;
     switch (command.getType()) {
       case INSERT: {
+        // 对用户传入的参数进行转换
         Object param = method.convertArgsToSqlCommandParam(args);
+        // 执行插入操作，rowCountResult方法用于处理返回值
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
       case UPDATE: {
         Object param = method.convertArgsToSqlCommandParam(args);
+        // 执行更新操作
         result = rowCountResult(sqlSession.update(command.getName(), param));
         break;
       }
       case DELETE: {
         Object param = method.convertArgsToSqlCommandParam(args);
+        // 执行删除操作
         result = rowCountResult(sqlSession.delete(command.getName(), param));
         break;
       }
       case SELECT:
+        // 根据目标的返回类型进行相应的查询操作
         if (method.returnsVoid() && method.hasResultHandler()) {
+          /*
+           * 如果方法返回值为 void，但参数列表中包含 ResultHandler，表明使用者
+           * 想通过 ResultHandler 的方式获取查询结果，而非通过返回值获取结果
+           */
           executeWithResultHandler(sqlSession, args);
           result = null;
         } else if (method.returnsMany()) {
+          // 执行查询操作，并返回多个结果
           result = executeForMany(sqlSession, args);
         } else if (method.returnsMap()) {
+          // 执行查询操作，并将结果封装在 Map 中返回
           result = executeForMap(sqlSession, args);
         } else if (method.returnsCursor()) {
+          // 执行查询操作，并返回一个 Cursor 对象
           result = executeForCursor(sqlSession, args);
         } else {
+          // 执行查询操作，并返回一个结果
           Object param = method.convertArgsToSqlCommandParam(args);
           result = sqlSession.selectOne(command.getName(), param);
           if (method.returnsOptional()
@@ -101,11 +115,13 @@ public class MapperMethod {
         }
         break;
       case FLUSH:
+        // 执行刷新操作
         result = sqlSession.flushStatements();
         break;
       default:
         throw new BindingException("Unknown execution method for: " + command.getName());
     }
+    // 如果方法的返回值为基本类型，而返回值却为 null，此种情况下应抛出异常
     if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
       throw new BindingException("Mapper method '" + command.getName()
                                  + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
