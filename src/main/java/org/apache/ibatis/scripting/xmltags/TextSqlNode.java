@@ -47,12 +47,15 @@ public class TextSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    // 创建${}占位符解析器
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+    // 解析${}占位符，并将解析结果添加到DynamicContext中
     context.appendSql(parser.parse(text));
     return true;
   }
 
   private GenericTokenParser createParser(TokenHandler handler) {
+    // 创建占位符解析器，GenericTokenParser 是一个通用解析器，并非只能解析 ${}
     return new GenericTokenParser("${", "}", handler);
   }
 
