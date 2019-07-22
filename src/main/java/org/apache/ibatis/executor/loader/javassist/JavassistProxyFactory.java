@@ -49,6 +49,7 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
 
   public JavassistProxyFactory() {
     try {
+      // 加载 javassist.util.proxy.ProxyFactory 类
       Resources.classForName("javassist.util.proxy.ProxyFactory");
     } catch (Throwable e) {
       throw new IllegalStateException("Cannot enable lazy loading because Javassist is not available. Add Javassist to your classpath.", e);
@@ -71,7 +72,9 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
 
   static Object crateProxy(Class<?> type, MethodHandler callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
 
+    // 创建 javassist ProxyFactory 对象
     ProxyFactory enhancer = new ProxyFactory();
+    // 设置父类
     enhancer.setSuperclass(type);
 
     try {

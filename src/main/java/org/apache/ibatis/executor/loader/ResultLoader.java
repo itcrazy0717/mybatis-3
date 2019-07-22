@@ -48,6 +48,10 @@ public class ResultLoader {
   protected final CacheKey cacheKey;
   protected final BoundSql boundSql;
   protected final ResultExtractor resultExtractor;
+
+  /**
+   * 创建 ResultLoader 对象时，所在的线程
+   */
   protected final long creatorThreadId;
 
   protected boolean loaded;
@@ -62,7 +66,9 @@ public class ResultLoader {
     this.objectFactory = configuration.getObjectFactory();
     this.cacheKey = cacheKey;
     this.boundSql = boundSql;
+    // 初始化resultExtractor
     this.resultExtractor = new ResultExtractor(configuration, objectFactory);
+    // 初始化creatorThreadId
     this.creatorThreadId = Thread.currentThread().getId();
   }
 
@@ -75,11 +81,13 @@ public class ResultLoader {
   }
 
   private <E> List<E> selectList() throws SQLException {
+    // 获取Executor对象
     Executor localExecutor = executor;
     if (Thread.currentThread().getId() != this.creatorThreadId || localExecutor.isClosed()) {
       localExecutor = newExecutor();
     }
     try {
+      // 执行查询
       return localExecutor.query(mappedStatement, parameterObject, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, cacheKey, boundSql);
     } finally {
       if (localExecutor != executor) {

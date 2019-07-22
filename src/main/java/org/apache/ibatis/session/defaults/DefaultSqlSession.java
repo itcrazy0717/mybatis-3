@@ -99,14 +99,19 @@ public class DefaultSqlSession implements SqlSession {
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
+    // 执行查询
     final List<? extends V> list = selectList(statement, parameter, rowBounds);
+    // 创建 DefaultMapResultHandler 对象
     final DefaultMapResultHandler<K, V> mapResultHandler = new DefaultMapResultHandler<>(mapKey,
             configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());
+    // 创建 DefaultResultContext 对象
     final DefaultResultContext<V> context = new DefaultResultContext<>();
+    // 进行遍历处理
     for (V o : list) {
       context.nextResultObject(o);
       mapResultHandler.handleResult(context);
     }
+    // 返回结果
     return mapResultHandler.getMappedResults();
   }
 
@@ -326,14 +331,17 @@ public class DefaultSqlSession implements SqlSession {
 
   private Object wrapCollection(final Object object) {
     if (object instanceof Collection) {
+      // 如果是集合，则添加到 collection 中
       StrictMap<Object> map = new StrictMap<>();
       map.put("collection", object);
       if (object instanceof List) {
+        // 如果是 List ，则添加到 list 中
         map.put("list", object);
       }
       return map;
     } else if (object != null && object.getClass().isArray()) {
       StrictMap<Object> map = new StrictMap<>();
+      // 如果是 Array ，则添加到 array 中
       map.put("array", object);
       return map;
     }

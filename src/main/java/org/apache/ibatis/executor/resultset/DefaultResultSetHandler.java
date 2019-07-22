@@ -77,6 +77,12 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final MappedStatement mappedStatement;
   private final RowBounds rowBounds;
   private final ParameterHandler parameterHandler;
+
+  /**
+   * 用户指定的用于处理结果的处理器。
+   *
+   * 一般情况下，不设置
+   */
   private final ResultHandler<?> resultHandler;
   private final BoundSql boundSql;
   private final TypeHandlerRegistry typeHandlerRegistry;
@@ -303,6 +309,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private void validateResultMapsCount(ResultSetWrapper rsw, int resultMapCount) {
+    // 验证至少一个ResultMap对象
     if (rsw != null && resultMapCount < 1) {
       throw new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
                                   + "'.  It's likely that neither a Result Type nor a Result Map was specified.");
@@ -325,6 +332,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           // 处理结果集的行为数据
           handleRowValues(rsw, resultMap, defaultResultHandler, rowBounds, null);
           multipleResults.add(defaultResultHandler.getResultList());
+        // 如果自定义了resultHandler则走自定义的实现
         } else {
           // 处理结果集的行数据
           handleRowValues(rsw, resultMap, resultHandler, rowBounds, null);
@@ -946,15 +954,22 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   public ResultMap resolveDiscriminatedResultMap(ResultSet rs, ResultMap resultMap, String columnPrefix) throws SQLException {
+    // 记录已经处理过的 Discriminator 对应的 ResultMap 的编号
     Set<String> pastDiscriminators = new HashSet<>();
     Discriminator discriminator = resultMap.getDiscriminator();
+    // 如果存在 Discriminator 对象，则基于其获得 ResultMap 对象
     while (discriminator != null) {
+      // 获得 Discriminator 的指定字段，在 ResultSet 中该字段的值
       final Object value = getDiscriminatorValue(rs, discriminator, columnPrefix);
+      // 从 Discriminator 获取该值对应的 ResultMap 的编号
       final String discriminatedMapId = discriminator.getMapIdFor(String.valueOf(value));
+      // 如果存在，则使用该 ResultMap 对象
       if (configuration.hasResultMap(discriminatedMapId)) {
+        // 获得该 ResultMap 对象
         resultMap = configuration.getResultMap(discriminatedMapId);
         Discriminator lastDiscriminator = discriminator;
         discriminator = resultMap.getDiscriminator();
+        // 判断，如果出现“重复”的情况，结束循环
         if (discriminator == lastDiscriminator || !pastDiscriminators.add(discriminatedMapId)) {
           break;
         }

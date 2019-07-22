@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.executor.resultset;
 
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.session.Configuration;
@@ -42,9 +43,28 @@ public class ResultSetWrapper {
 
   private final ResultSet resultSet;
   private final TypeHandlerRegistry typeHandlerRegistry;
+
+  /**
+   * 字段的名字的数组
+   */
   private final List<String> columnNames = new ArrayList<>();
+
+  /**
+   * 字段的 Java Type 的数组
+   */
   private final List<String> classNames = new ArrayList<>();
+
+  /**
+   * 字段的 JdbcType 的数组
+   */
   private final List<JdbcType> jdbcTypes = new ArrayList<>();
+
+  /**
+   * TypeHandler 的映射
+   * <p>
+   * KEY1：字段的名字
+   * KEY2：Java 属性类型
+   */
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
@@ -53,6 +73,7 @@ public class ResultSetWrapper {
     super();
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.resultSet = rs;
+    // 遍历 ResultSetMetaData 的字段们，解析出 columnNames、jdbcTypes、classNames 属性
     final ResultSetMetaData metaData = rs.getMetaData();
     final int columnCount = metaData.getColumnCount();
     for (int i = 1; i <= columnCount; i++) {
@@ -79,7 +100,7 @@ public class ResultSetWrapper {
   }
 
   public JdbcType getJdbcType(String columnName) {
-    for (int i = 0 ; i < columnNames.size(); i++) {
+    for (int i = 0; i < columnNames.size(); i++) {
       if (columnNames.get(i).equalsIgnoreCase(columnName)) {
         return jdbcTypes.get(i);
       }
@@ -88,6 +109,7 @@ public class ResultSetWrapper {
   }
 
   /**
+   * 获得指定字段名的指定 JavaType 类型的 TypeHandler 对象<br/>
    * Gets the type handler to use when reading the result set.
    * Tries to get from the TypeHandlerRegistry by searching for the property type.
    * If not found it gets the column JDBC type and tries to get a handler for it.
@@ -98,6 +120,7 @@ public class ResultSetWrapper {
    */
   public TypeHandler<?> getTypeHandler(Class<?> propertyType, String columnName) {
     TypeHandler<?> handler = null;
+    //  从缓存的 typeHandlerMap 中，获得指定字段名的指定 JavaType 类型的 TypeHandler 对象
     Map<Class<?>, TypeHandler<?>> columnHandlers = typeHandlerMap.get(columnName);
     if (columnHandlers == null) {
       columnHandlers = new HashMap<>();
@@ -105,12 +128,17 @@ public class ResultSetWrapper {
     } else {
       handler = columnHandlers.get(propertyType);
     }
+    // 如果获取不到，则进行查找
     if (handler == null) {
+      // 获得 JdbcType 类型
       JdbcType jdbcType = getJdbcType(columnName);
+      // 获得 TypeHandler 对象
       handler = typeHandlerRegistry.getTypeHandler(propertyType, jdbcType);
       // Replicate logic of UnknownTypeHandler#resolveTypeHandler
       // See issue #59 comment 10
+      // 如果获取不到，则再次进行查找
       if (handler == null || handler instanceof UnknownTypeHandler) {
+        // 使用 classNames 中的类型，继续查找 TypeHandler 对象
         final int index = columnNames.indexOf(columnName);
         final Class<?> javaType = resolveClass(classNames.get(index));
         if (javaType != null && jdbcType != null) {
@@ -121,9 +149,11 @@ public class ResultSetWrapper {
           handler = typeHandlerRegistry.getTypeHandler(jdbcType);
         }
       }
+      // 如果获取不到，则使用 ObjectTypeHandler 对象
       if (handler == null || handler instanceof UnknownTypeHandler) {
         handler = new ObjectTypeHandler();
       }
+      // 缓存到typeHandlerMap中
       columnHandlers.put(propertyType, handler);
     }
     return handler;
@@ -191,9 +221,11 @@ public class ResultSetWrapper {
   }
 
   private Set<String> prependPrefixes(Set<String> columnNames, String prefix) {
+    // 直接返回 columnNames ，如果符合如下任一情况
     if (columnNames == null || columnNames.isEmpty() || prefix == null || prefix.length() == 0) {
       return columnNames;
     }
+    // 拼接前缀 prefix ，然后返回
     final Set<String> prefixed = new HashSet<>();
     for (String columnName : columnNames) {
       prefixed.add(prefix + columnName);
