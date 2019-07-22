@@ -50,12 +50,14 @@ public class ResultLoaderMap {
   private final Map<String, LoadPair> loaderMap = new HashMap<>();
 
   public void addLoader(String property, MetaObject metaResultObject, ResultLoader resultLoader) {
+    // 将属性名转换为大写
     String upperFirst = getUppercaseFirstProperty(property);
     if (!upperFirst.equalsIgnoreCase(property) && loaderMap.containsKey(upperFirst)) {
       throw new ExecutorException("Nested lazy loaded result property '" + property
               + "' for query id '" + resultLoader.mappedStatement.getId()
               + " already exists in the result map. The leftmost property of all lazy loaded properties must be unique within a result map.");
     }
+    // 创建 LoadPair，并将 <大写属性名，LoadPair对象> 键值对添加到 loaderMap 中
     loaderMap.put(upperFirst, new LoadPair(property, metaResultObject, resultLoader));
   }
 
@@ -76,8 +78,10 @@ public class ResultLoaderMap {
   }
 
   public boolean load(String property) throws SQLException {
+    // 从 loaderMap 中移除 property 所对应的 LoadPair
     LoadPair pair = loaderMap.remove(property.toUpperCase(Locale.ENGLISH));
     if (pair != null) {
+      // 加载结果
       pair.load();
       return true;
     }
@@ -180,11 +184,15 @@ public class ResultLoaderMap {
       if (this.resultLoader == null) {
         throw new IllegalArgumentException("resultLoader is null");
       }
-
+      // 调用重载方法
       this.load(null);
     }
 
     public void load(final Object userObject) throws SQLException {
+      /*
+       * 若 metaResultObject 和 resultLoader 为 null，则创建相关对象。
+       * 在当前调用情况下，两者均不为 null，条件不成立。
+       */
       if (this.metaResultObject == null || this.resultLoader == null) {
         if (this.mappedParameter == null) {
           throw new ExecutorException("Property [" + this.property + "] cannot be loaded because "
@@ -210,12 +218,16 @@ public class ResultLoaderMap {
        * and executors aren't thread safe. (Is this sufficient?)
        *
        * A better approach would be making executors thread safe. */
+      // 线程安全检测
       if (this.serializationCheck == null) {
         final ResultLoader old = this.resultLoader;
         this.resultLoader = new ResultLoader(old.configuration, new ClosedExecutor(), old.mappedStatement,
                 old.parameterObject, old.targetType, old.cacheKey, old.boundSql);
       }
-
+      /*
+       * 调用 ResultLoader 的 loadResult 方法加载结果，
+       * 并通过 metaResultObject 设置结果到实体类对象中
+       */
       this.metaResultObject.setValue(property, this.resultLoader.loadResult());
     }
 

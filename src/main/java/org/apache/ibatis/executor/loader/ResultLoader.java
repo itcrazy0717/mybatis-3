@@ -67,7 +67,9 @@ public class ResultLoader {
   }
 
   public Object loadResult() throws SQLException {
+    // 执行关联查询
     List<Object> list = selectList();
+    // 执行关联查询
     resultObject = resultExtractor.extractObjectFromList(list, targetType);
     return resultObject;
   }

@@ -131,13 +131,21 @@ public class MapperMethod {
 
   private Object rowCountResult(int rowCount) {
     final Object result;
+    /*
+     * 这里的 method 类型为 MethodSignature，即方法签名，包含了某个方法较为详细的信息。
+     * 某个方法指的是 Mapper 或 Dao 接口中的方法
+     */
     if (method.returnsVoid()) {
+      // 方法返回类型为 void，则不用返回结果，这里将结果置空
       result = null;
     } else if (Integer.class.equals(method.getReturnType()) || Integer.TYPE.equals(method.getReturnType())) {
+      // 方法返回类型为 Integer 或 int，直接赋值返回即可
       result = rowCount;
     } else if (Long.class.equals(method.getReturnType()) || Long.TYPE.equals(method.getReturnType())) {
+      // 如果返回值类型为 Long 或者 long，这里强转一下即可
       result = (long) rowCount;
     } else if (Boolean.class.equals(method.getReturnType()) || Boolean.TYPE.equals(method.getReturnType())) {
+      // 方法返回类型为布尔类型，若 rowCount > 0，则返回 ture，否则返回 false
       result = rowCount > 0;
     } else {
       throw new BindingException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());

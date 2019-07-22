@@ -199,7 +199,9 @@ public class DefaultSqlSession implements SqlSession {
   public int update(String statement, Object parameter) {
     try {
       dirty = true;
+      // 获取 MappedStatement
       MappedStatement ms = configuration.getMappedStatement(statement);
+      // 调用 Executor 的 update 方法
       return executor.update(ms, wrapCollection(parameter));
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error updating database.  Cause: " + e, e);

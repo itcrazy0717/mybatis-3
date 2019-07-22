@@ -103,6 +103,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     public ResultMapping propertyMapping;
   }
 
+  /**
+   *  用于记录未配置在 <resultMap/> 节点中的映射关系
+   */
   private static class UnMappedColumnAutoMapping {
     private final String column;
     private final String property;
@@ -396,7 +399,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   @SuppressWarnings("unchecked" /* because ResultHandler<?> is always ResultHandler<Object>*/)
   private void callResultHandler(ResultHandler<?> resultHandler, DefaultResultContext<Object> resultContext, Object rowValue) {
+    // 设置结果到resultContext中
     resultContext.nextResultObject(rowValue);
+    // 从 resultContext 获取结果，并存储到 resultHandler 中
     ((ResultHandler<Object>) resultHandler).handleResult(resultContext);
   }
 
@@ -411,6 +416,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         // 直接定位到rowBounds.getOffset()位置处
         rs.absolute(rowBounds.getOffset());
       }
+    // 从这里可以看出mybatis的默认分页方式效率是非常低的
+    // 因为这里通过循环不停的定位数据的位置
     } else {
       for (int i = 0; i < rowBounds.getOffset(); i++) {
         /*
@@ -455,8 +462,10 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       return resultMap.getAutoMapping();
     } else {
       if (isNested) {
+        // 对于嵌套 resultMap，仅当全局的映射行为为 FULL 时，才进行自动映射
         return AutoMappingBehavior.FULL == configuration.getAutoMappingBehavior();
       } else {
+        // 对于普通的 resultMap，只要全局的映射行为不为 NONE，即可进行自动映射
         return AutoMappingBehavior.NONE != configuration.getAutoMappingBehavior();
       }
     }
@@ -833,25 +842,53 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getNestedQueryMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
     throws SQLException {
+    // 获取关联查询id，id=命名空间+<association>的select属性值
     final String nestedQueryId = propertyMapping.getNestedQueryId();
     final String property = propertyMapping.getProperty();
+    // 根据 nestedQueryId 获取 MappedStatement
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
     final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
+    /*
+     * 生成关联查询语句参数对象，参数类型可能是一些包装类，Map 或是自定义的实体类，
+     * 具体类型取决于配置信息。以上面的例子为基础，下面分析不同配置对参数类型的影响：
+     *   1. <association column="author_id">
+     *      column 属性值仅包含列信息，参数类型为 author_id 列对应的类型，这里为 Integer
+     *
+     *   2. <association column="{id=author_id, name=title}">
+     *      column 属性值包含了属性名与列名的复合信息，MyBatis 会根据列名从 ResultSet 中
+     *      获取列数据，并将列数据设置到实体类对象的指定属性中，比如：
+     *          Author{id=1, name="MyBatis 源码分析系列文章导读", age=null, ....}
+     *      或是以键值对 <属性, 列数据> 的形式，将两者存入 Map 中。比如：
+     *          {"id": 1, "name": "MyBatis 源码分析系列文章导读"}
+     *
+     *      至于参数类型到底为实体类还是 Map，取决于关联查询语句的配置信息。比如：
+     *          <select id="findAuthor">  ->  参数类型为 Map
+     *          <select id="findAuthor" parameterType="Author"> -> 参数类型为实体类
+     */
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, propertyMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
     if (nestedQueryParameterObject != null) {
+      // 获取BoundSql
       final BoundSql nestedBoundSql = nestedQuery.getBoundSql(nestedQueryParameterObject);
       final CacheKey key = executor.createCacheKey(nestedQuery, nestedQueryParameterObject, RowBounds.DEFAULT, nestedBoundSql);
       final Class<?> targetType = propertyMapping.getJavaType();
+      // 检查一节缓存是否保存了关联查询结果
       if (executor.isCached(nestedQuery, key)) {
+        /**
+         * 从一级缓存中获取关联查询的结果，并通过metaResultObject将结果设置到相应的实体类对象中
+         */
         executor.deferLoad(nestedQuery, metaResultObject, property, key, targetType);
         value = DEFERRED;
       } else {
+        // 创建结果加载器
         final ResultLoader resultLoader = new ResultLoader(configuration, executor, nestedQuery, nestedQueryParameterObject, targetType, key, nestedBoundSql);
+        // 检测当前属性是否需要延迟加载
         if (propertyMapping.isLazy()) {
+          // 添加延迟加载相关的对象到 loaderMap 集合中
           lazyLoader.addLoader(property, metaResultObject, resultLoader);
           value = DEFERRED;
         } else {
+          // 直接执行关联查询
           value = resultLoader.loadResult();
         }
       }
