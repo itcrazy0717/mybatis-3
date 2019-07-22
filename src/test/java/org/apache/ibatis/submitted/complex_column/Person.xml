@@ -21,12 +21,12 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.apache.ibatis.submitted.complex_column.PersonMapper">
-
+   <!--<cache/>-->
     <resultMap id="personMap" type="Person">
         <id property="id" column="id"/>
         <result property="firstName" column="firstName"/>
         <result property="lastName" column="lastName"/>
-        <association property="parent" column="parent_id" select="getParentWithoutComplex"/>
+        <!--<association property="parent" column="parent_id" select="getParentWithoutComplex"/>-->
     </resultMap>
 
     <resultMap id="personMapComplex" type="Person">
