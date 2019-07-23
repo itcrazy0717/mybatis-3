@@ -417,7 +417,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
      *   - resultType：即 <resultMap type="xxx"/> 中的 type 属性
      *   - property：即 <result property="xxx"/> 中的 property 属性
      */
-    // 解析对应的Java Type类和TypeHandler对象
+    // 解析<resultMap/>标签下属性所对应的类型，这里会通过type类的元信息进行解析，也就是通过属性进行解析
+    /**
+     *  <id property="id" column="id"/>
+     *  <result property="firstName" column="firstName"/>
+     *  <result property="lastName" column="lastName"/>
+     */
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
     // 解析TypeHandler
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);

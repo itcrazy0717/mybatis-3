@@ -131,7 +131,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       loadCustomVfs(settings);
       // 加载日志实现类
       loadCustomLogImpl(settings);
-      // 解析<typeAliases/>标签
+      // 解析<typeAliases/>标签 注册别名，添加到typeAliases集合中
       typeAliasesElement(root.evalNode("typeAliases"));
       // 解析<plugins/>标签
       pluginElement(root.evalNode("plugins"));
@@ -304,7 +304,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void settingsElement(Properties props) {
     configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior", "PARTIAL")));
     configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty("autoMappingUnknownColumnBehavior", "NONE")));
-    // 设置cacheEnabled属性，默认为true
+    // 设置cacheEnabled属性，默认为true 表示二级缓存是可用的，但是要使用二级缓存还需在mapper.xml中进行配置
     configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), true));
     configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty("proxyFactory")));
     configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty("lazyLoadingEnabled"), false));
