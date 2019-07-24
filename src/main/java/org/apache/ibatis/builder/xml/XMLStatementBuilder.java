@@ -220,6 +220,8 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (databaseId != null) {
       return false;
     }
+
+    // 返回当前id，形式为${namespace}.${id}的形式
     id = builderAssistant.applyCurrentNamespace(id, false);
     if (!this.configuration.hasStatement(id, false)) {
       return true;
