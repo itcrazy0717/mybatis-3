@@ -52,7 +52,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     // 创建GenericTokenParser对象 #{}占位符解析器
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
-    // 执行解析
+    // 执行解析 将#{}替换成?
     String sql = parser.parse(originalSql);
     // 创建StaticSqlSource对象
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
@@ -96,8 +96,8 @@ public class SqlSourceBuilder extends BaseBuilder {
 
     private ParameterMapping buildParameterMapping(String content) {
       /*
-       * 将 #{xxx} 占位符中的内容解析成 Map。大家可能很好奇一个普通的字符串是怎么解析成 Map 的，
-       * 举例说明一下。如下：
+       * 将 #{xxx} 占位符中的内容解析成 Map。
+       * 如下：
        *
        *    #{age,javaType=int,jdbcType=NUMERIC,typeHandler=MyTypeHandler}
        *
@@ -110,8 +110,7 @@ public class SqlSourceBuilder extends BaseBuilder {
        *      "javaType": "int"
        *  }
        *
-       * parseParameterMapping 内部依赖 ParameterExpression 对字符串进行解析，ParameterExpression 的
-       * 逻辑不是很复杂，这里就不分析了。大家若有兴趣，可自行分析
+       * parseParameterMapping 内部依赖 ParameterExpression 对字符串进行解析
        */
       // 解析成Map集合
       Map<String, String> propertiesMap = parseParameterMapping(content);

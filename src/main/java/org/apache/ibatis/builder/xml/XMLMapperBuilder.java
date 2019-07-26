@@ -393,7 +393,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     // 创建ResultMapResolver对象，执行解析
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
-      // 根据前面获取到的信息构建ResultMap对象
+      // 根据前面获取到的信息构建ResultMap对象 <resultMap/>标签最终会被封装成ResultMap对象
       return resultMapResolver.resolve();
     } catch (IncompleteElementException e) {
       // 解析失败，添加到configuration中
@@ -525,7 +525,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     Class<?> javaTypeClass = resolveClass(javaType);
     Class<? extends TypeHandler<?>> typeHandlerClass = resolveClass(typeHandler);
     JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
-    // 构建ResultMapping对象
+    // 构建ResultMapping对象 <resultMap/>标签内的每个<result/>标签都会被封装成ResultMapping对象
     return builderAssistant.buildResultMapping(resultType, property, column, javaTypeClass, jdbcTypeEnum, nestedSelect, nestedResultMap, notNullColumn, columnPrefix, typeHandlerClass, flags, resultSet, foreignColumn, lazy);
   }
 

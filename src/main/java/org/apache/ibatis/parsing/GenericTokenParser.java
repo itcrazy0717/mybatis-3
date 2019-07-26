@@ -45,7 +45,7 @@ public class GenericTokenParser {
     // search open token
     // 寻找开始的openToken的位置
     int start = text.indexOf(openToken);
-    // 找不到则直接返回
+    // 如果没有占位符，则直接返回sql语句
     if (start == -1) {
       return text;
     }
@@ -54,8 +54,9 @@ public class GenericTokenParser {
     int offset = 0;
     // 结果
     final StringBuilder builder = new StringBuilder();
+    // 存储占位符 #{} ${}
     StringBuilder expression = null;
-    // 循环匹配
+    // 循环处理
     while (start > -1) {
       // 转义字符
       if (start > 0 && src[start - 1] == '\\') {
@@ -109,6 +110,7 @@ public class GenericTokenParser {
           offset = src.length;
         } else {
           // closeToken找到，将expression提交给handler处理，并将结果添加到builder中
+          // 通过TokenHandler对占位符进行处理，替换成?
           builder.append(handler.handleToken(expression.toString()));
           // 修改offset
           offset = end + closeToken.length();

@@ -121,6 +121,7 @@ public class Configuration {
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
   protected Integer defaultStatementTimeout;
   protected Integer defaultFetchSize;
+  // mybatis中默认的执行器为简单的执行器:SimpleExecutor
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
@@ -598,7 +599,7 @@ public class Configuration {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
     Executor executor;
-    // 创建对应实现的Executor对象
+    // 创建对应的Executor对象
     if (ExecutorType.BATCH == executorType) {
       executor = new BatchExecutor(this, transaction);
     } else if (ExecutorType.REUSE == executorType) {
@@ -606,12 +607,14 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
-    // 开启缓存，则使用CachingExecutor进行包装
+    // 二级缓存默认是可用的，所以这里会使用CachingExecutor进行包装，但要具体使用二级缓存还需要在mapper.xml文件中进行配置
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
     // 应用插件
     executor = (Executor) interceptorChain.pluginAll(executor);
+    // 默认使用SimpleExecutor，但是默认二级缓存是可用的，因此executor又会被封装成CachingExecutor
+    // 使用的装饰者模式，内部进行委托调用
     return executor;
   }
 
