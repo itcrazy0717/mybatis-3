@@ -33,7 +33,7 @@ public class ParamNameResolverTest {
   }
 
   class ArticleMapper {
-    public void select(@Param("id") Integer id, @Param("author") String author, RowBounds rb, Article article) {
+    public void select(/**@Param("id")*/ Integer id, @Param("author") String author, RowBounds rb, Article article) {
     }
   }
 }

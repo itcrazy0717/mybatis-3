@@ -325,6 +325,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     // 解析默认的枚举处理器
     configuration.setDefaultEnumTypeHandler(resolveClass(props.getProperty("defaultEnumTypeHandler")));
     configuration.setCallSettersOnNulls(booleanValueOf(props.getProperty("callSettersOnNulls"), false));
+    // useActualParamName默认值为true，默认使用真实的参数名
     configuration.setUseActualParamName(booleanValueOf(props.getProperty("useActualParamName"), true));
     configuration.setReturnInstanceForEmptyRow(booleanValueOf(props.getProperty("returnInstanceForEmptyRow"), false));
     configuration.setLogPrefix(props.getProperty("logPrefix"));

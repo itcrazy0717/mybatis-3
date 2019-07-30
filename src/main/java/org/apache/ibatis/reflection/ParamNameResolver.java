@@ -55,7 +55,7 @@ public class ParamNameResolver {
   public ParamNameResolver(Configuration config, Method method) {
     // 获取参数类型列表
     final Class<?>[] paramTypes = method.getParameterTypes();
-    // 获取参数注解
+    // 获取参数列表
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
     int paramCount = paramAnnotations.length;
@@ -71,6 +71,7 @@ public class ParamNameResolver {
       for (Annotation annotation : paramAnnotations[paramIndex]) {
         if (annotation instanceof Param) {
           hasParamAnnotation = true;
+          // 如果有@Param注解，则map的name直接使用@Param注解的name值
           name = ((Param) annotation).value();
           break;
         }

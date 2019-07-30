@@ -44,6 +44,8 @@ class ComplexColumnTest {
   void testWithoutComplex() {
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       PersonMapper personMapper = sqlSession.getMapper(PersonMapper.class);
+      Person john = personMapper.getPerson(1L, "John");
+      Person cacheJohn = personMapper.getPerson(1L, "John");
       Person person = personMapper.getWithoutComplex(2L);
       Person cachePerson = personMapper.getWithoutComplex(2L);
       Assertions.assertNotNull(person, "person must not be null");

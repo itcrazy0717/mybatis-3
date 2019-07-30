@@ -182,7 +182,7 @@ public abstract class BaseExecutor implements Executor {
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       // 获取到，则进行处理
       if (list != null) {
-        // 存储过程相关逻辑
+        // 执行存储过程相关逻辑，如无存储过程则直接跳过，返回list即可
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
         // 一级缓存未命中，则从数据库中查询
