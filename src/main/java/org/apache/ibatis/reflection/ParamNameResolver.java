@@ -148,8 +148,8 @@ public class ParamNameResolver {
        * 比如如下方法：
        *     List findList(RowBounds rb, String name)
        * names 如下：
-       *     names = {1 : "0"}
-       * 此种情况下，返回 args[names.firstKey()]，即 args[1] -> name
+       *     names = {0 : "name"}
+       * 此种情况下，返回 args[names.firstKey()]，即 args[0] -> 0 args数组为参数值
        */
       return args[names.firstKey()];
     } else {
@@ -166,6 +166,7 @@ public class ParamNameResolver {
         // 组合2：添加到param中  genericParamName = param + index。比如 param1, param2, ... paramN
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
+
         /*
          * 检测 names 中是否包含 genericParamName，什么情况下会包含？答案如下：
          *

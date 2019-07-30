@@ -366,7 +366,7 @@ public class MapperMethod {
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
       // 获取 ResultHandler 参数在参数列表中的位置
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
-      // 解析参数列表
+      // 解析参数列表 这里比较重要会把参数按顺序存储到names属性中
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 

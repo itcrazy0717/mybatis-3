@@ -445,7 +445,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
-    // 创建实体类对象，比如Article对象
+    // 创建实体类对象，resultType中的类型
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
     if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
@@ -540,7 +540,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       return DEFERRED;
     } else {
       final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
+      // 拼接前缀
       final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
+      // 从ResultSet中获取指定列的值
       return typeHandler.getResult(rs, column);
     }
   }

@@ -585,6 +585,7 @@ public class Configuration {
   }
 
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    // 创建具有路由功能的StatementHandler
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
@@ -608,6 +609,7 @@ public class Configuration {
       executor = new SimpleExecutor(this, transaction);
     }
     // 二级缓存默认是可用的，所以这里会使用CachingExecutor进行包装，但要具体使用二级缓存还需要在mapper.xml文件中进行配置
+    // 默认情况下executor会使用CachingExecutor，因为这里进行了包装
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }

@@ -90,7 +90,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     public String handleToken(String content) {
       // 构建ParameterMapping对象，并添加到parameterMappings中
       parameterMappings.add(buildParameterMapping(content));
-      // 返回"?"占位符
+      // 返回"?"占位符  ***********这里就是将#{}中的内容替换成?的关键点
       return "?";
     }
 

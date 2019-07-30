@@ -80,6 +80,7 @@ public class CachingExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
+    // 刷新二级缓存
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
   }
@@ -103,7 +104,7 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
-    // 从MappedStatement中获取缓存
+    // 从MappedStatement中获取缓存 这里是否有Cache主要是看mapper.xml文件中是否进行了二级缓存的配置
     Cache cache = ms.getCache();
     // 若映射文件中未配置缓存或参照缓存，此时cache=null
     if (cache != null) {
