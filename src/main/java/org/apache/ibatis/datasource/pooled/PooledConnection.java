@@ -280,6 +280,7 @@ class PooledConnection implements InvocationHandler {
     String methodName = method.getName();
     // 判断是否为close方法，如果是，则将连接放到连接池中，避免连接被关闭
     if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
+      // 如果close方法被拦截，则将连接放回连接池中
       dataSource.pushConnection(this);
       return null;
     }

@@ -108,6 +108,7 @@ public class CacheKey implements Cloneable, Serializable {
     }
   }
 
+  // CacheKey覆写了equals方法，把所有的因子都进行了计算，如果所有相等才会返回true
   @Override
   public boolean equals(Object object) {
     if (this == object) {
@@ -128,7 +129,7 @@ public class CacheKey implements Cloneable, Serializable {
     if (count != cacheKey.count) {
       return false;
     }
-
+    // 比较每个因子
     for (int i = 0; i < updateList.size(); i++) {
       Object thisObject = updateList.get(i);
       Object thatObject = cacheKey.updateList.get(i);

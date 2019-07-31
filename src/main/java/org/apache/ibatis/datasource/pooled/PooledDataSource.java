@@ -605,8 +605,7 @@ public class PooledDataSource implements DataSource {
       }
 
     }
-    // 获取不到连接，则抛出异常 这块逻辑应该执行不到的，因为上述为一个while循环，
-    // 如果在循环体中出错，就已经抛出异常
+    // 获取不到连接，则抛出异常
     if (conn == null) {
       if (log.isDebugEnabled()) {
         log.debug("PooledDataSource: Unknown severe error condition.  The connection pool returned a null connection.");
