@@ -105,8 +105,9 @@ public class MapperMethod {
           // 执行查询操作，并返回一个 Cursor 对象
           result = executeForCursor(sqlSession, args);
         } else {
-          // 执行查询操作，并返回一个结果
+          // 转换入参
           Object param = method.convertArgsToSqlCommandParam(args);
+          // 执行查询操作，并返回一个结果
           result = sqlSession.selectOne(command.getName(), param);
           if (method.returnsOptional()
               && (result == null || !method.getReturnType().equals(result.getClass()))) {

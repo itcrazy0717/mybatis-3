@@ -87,6 +87,7 @@ public class DefaultParameterHandler implements ParameterHandler {
              */
             value = parameterObject;
           } else {
+            // 这里就是对传入的实例对象参数进行解析
             // 为用户传入的参数 parameterObject 创建元信息对象
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
             // 从用户传入的参数中获取 propertyName 对应的值

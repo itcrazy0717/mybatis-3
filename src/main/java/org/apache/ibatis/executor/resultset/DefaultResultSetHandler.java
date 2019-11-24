@@ -690,7 +690,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
         // issue gcode #109 && issue #149
-        // 如果开启了延迟加载，则为 resultObject 生成代理类
+        // 如果开启了延迟加载，则为 resultObject 生成代理类 注意延迟加载默认使用JavassistProxyFactory进行代理创建
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
           /*
            * 创建代理类，默认使用 Javassist 框架生成代理类。由于实体类通常不会实现接口，
