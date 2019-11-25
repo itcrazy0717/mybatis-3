@@ -142,9 +142,21 @@
 
     <!-- Remove after parent 32 (support for jdk 13) -->
     <jacoco.version>0.8.4</jacoco.version>
+    <pagehelper.version>5.0.0</pagehelper.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.github.pagehelper</groupId>
+      <artifactId>pagehelper</artifactId>
+      <version>${pagehelper.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.2</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>ognl</groupId>
       <artifactId>ognl</artifactId>

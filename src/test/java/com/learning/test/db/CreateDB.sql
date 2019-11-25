@@ -27,4 +27,22 @@ INSERT INTO person (id, firstName, lastName)
 VALUES (2, 'Christian', 'Poitras');
 
 INSERT INTO person (id, firstName, lastName)
-VALUES (3, 'Clinton', 'Begin');
+VALUES (3, 'test1', 'test1');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (4, 'test2', 'test2');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (5, 'test3', 'test3');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (6, 'test4', 'test4');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (7, 'test5', 'test5');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (8, 'test6', 'test6');
+
+INSERT INTO person (id, firstName, lastName)
+VALUES (9, 'test7', 'test7');

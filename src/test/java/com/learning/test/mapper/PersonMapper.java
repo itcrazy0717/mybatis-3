@@ -15,13 +15,36 @@
  */
 package com.learning.test.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 import com.learning.test.domain.Person;
 
 public interface PersonMapper {
 
-  Person getPersonById(Long id);
+  /**
+   * 通过#符拼接sql 测试$符和#的区别
+   *
+   * @param id
+   * @return
+   */
+  Person getPersonByIdFromPound(Long id);
+
+  /**
+   * /* 通过$符拼接sql 测试$符和#的区别
+   *
+   * @param id
+   * @return
+   */
+  Person getPersonByIdFromDollar(Long id);
+
+  /**
+   * 分页插件测试
+   *
+   * @return
+   */
+  List<Person> listPerson();
 
   /**
    * 测试多参数解析

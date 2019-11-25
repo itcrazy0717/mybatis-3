@@ -22,23 +22,27 @@
 
 <mapper namespace="com.learning.test.mapper.PersonMapper">
   <!--通过cache标签开启二级缓存-->
-  <cache/>
+ <!--<cache/>-->
   <resultMap id="personMap" type="com.learning.test.domain.Person">
     <id property="id" column="id"/>
     <result property="firstName" column="firstName"/>
     <result property="lastName" column="lastName"/>
   </resultMap>
 
-  <resultMap id="personMapComplex" type="com.learning.test.domain.Person">
-    <id property="id" column="id"/>
-    <result property="firstName" column="firstName"/>
-    <result property="lastName" column="lastName"/>
-  </resultMap>
-
-  <select id="getPersonById" resultMap="personMap" parameterType="long">
+  <select id="getPersonByIdFromPound" resultMap="personMap" parameterType="long">
     SELECT id, firstName, lastName
     FROM person
     WHERE id = #{id} <!--,jdbcType=INTEGER-->
+  </select>
+
+  <select id="listPerson" resultMap="personMap">
+    select id,firstName,lastName from person
+  </select>
+
+  <select id="getPersonByIdFromDollar" resultMap="personMap" parameterType="long">
+    SELECT id, firstName, lastName
+    FROM person
+    WHERE id = ${id} <!--,jdbcType=INTEGER-->
   </select>
 
   <select id="getPerson" resultMap="personMap">
