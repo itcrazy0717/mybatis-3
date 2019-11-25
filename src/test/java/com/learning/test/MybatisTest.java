@@ -66,6 +66,31 @@ public class MybatisTest {
   }
 
   /**
+   * 测试二级缓存 注意需在mapper.xml文件中进行二级缓存配置
+   */
+  @Test
+  public void secondCacheTest() {
+    SqlSession sqlSession1 = sqlSessionFactory.openSession();
+    SqlSession sqlSession2 = sqlSessionFactory.openSession();
+    try {
+      PersonMapper personMapper1 = sqlSession1.getMapper(PersonMapper.class);
+      PersonMapper personMapper2 = sqlSession2.getMapper(PersonMapper.class);
+
+      Person person1 = personMapper1.getPersonById(2L);
+      System.out.println("会话1的查询结果: " + person1.toString());
+      // 由于二级缓存是事务性的，所以必须commit才能将缓存进行更新
+      sqlSession1.commit();
+
+      Person person2 = personMapper2.getPersonById(2L);
+      System.out.println("会话2的查询结果：" + person2.toString());
+
+    } finally {
+      sqlSession1.close();
+      sqlSession2.close();
+    }
+  }
+
+  /**
    * 测试一级缓存失效
    */
   @Test

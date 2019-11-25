@@ -22,7 +22,7 @@
 
 <mapper namespace="com.learning.test.mapper.PersonMapper">
   <!--通过cache标签开启二级缓存-->
-  <!--<cache/>-->
+  <cache/>
   <resultMap id="personMap" type="com.learning.test.domain.Person">
     <id property="id" column="id"/>
     <result property="firstName" column="firstName"/>
