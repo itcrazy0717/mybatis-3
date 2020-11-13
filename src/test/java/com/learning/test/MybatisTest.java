@@ -1,6 +1,8 @@
 package com.learning.test;
 
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.ibatis.BaseDataTest;
@@ -8,6 +10,8 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.TransactionFactory;
+import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -166,6 +170,35 @@ public class MybatisTest {
       System.out.println("结果：");
       pageInfo.getList().forEach(e -> System.out.println(e.toString()));
     }
+  }
+
+  /**
+   * 事务测试
+   */
+  @Test
+  public void transactionTest() throws SQLException {
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    PersonMapper personMapper = sqlSession.getMapper(PersonMapper.class);
+    List<Person> peoples = personMapper.listPerson();
+    System.out.println(peoples.size());
+    Person person = new Person();
+    person.setId(4L);
+    person.setFirstName("testFirstName");
+    person.setLastName("testLastName");
+    TransactionFactory tf = new ManagedTransactionFactory();
+    Connection connection = tf.newTransaction(sqlSession.getConnection()).getConnection();
+    try {
+      connection.setAutoCommit(false);
+      personMapper.insert(person);
+      int testResult = 1 / 0;
+      connection.commit();
+      connection.setAutoCommit(true);
+    } catch (Exception e) {
+      connection.rollback();
+      connection.setAutoCommit(true);
+    }
+    List<Person> newPersonList = personMapper.listPerson();
+    System.out.println(newPersonList.size());
   }
 
 }
